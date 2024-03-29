@@ -1,0 +1,23 @@
+# Directories
+node_modules/
+dist/
+coverage/
+databaseOperations/
+
+# Environment variables
+.env
+# Log files
+*.log
+
+# Editor and IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS generated files
+.DS_Store
+request/
+# Dependency lock files
+package-lock.json
+yarn.lock
