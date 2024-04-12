@@ -7,6 +7,7 @@ const morgan = require('morgan')
 const userRoute = require('./Routes/userRoute')
 const contentsRoute = require('./Routes/contentsRoute')
 const citationRoute = require('./Routes/citationRoute')
+const actsRoute = require('./Routes/actsRoute')
 
 const app = express()
 
@@ -32,6 +33,7 @@ mongoose
 app.use('/api/solve_litigation/auth/', userRoute)
 app.use('/api/solve_litigation/contents/', contentsRoute)
 app.use('/api/solve_litigation/citation/', citationRoute)
+app.use('/api/solve_litigation/act/', actsRoute)
 
 const PORT = process.env.PORT || 3000
 app.listen(PORT, () => {

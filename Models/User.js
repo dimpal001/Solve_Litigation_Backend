@@ -8,6 +8,7 @@ const userSchema = new mongoose.Schema({
   district: String,
   userType: String,
   registrationType: String,
+  address: String,
 })
 
 const User = mongoose.model('User', userSchema)

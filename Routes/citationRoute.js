@@ -1,15 +1,18 @@
 const express = require('express')
 const Citation = require('../Models/Citation')
+const Act = require('../Models/Acts')
 const adminAuth = require('../Middleware/adminAuth')
+const staffAuth = require('../Middleware/staffAuth')
 const userAuth = require('../Middleware/userAuth')
+const { default: puppeteer } = require('puppeteer')
 
 const citationRoute = express.Router()
 
-citationRoute.post('/upload-citation', adminAuth, async (req, res) => {
+citationRoute.post('/upload-citation', staffAuth, async (req, res) => {
   try {
     const {
       institutionName,
-      apellateType,
+      apellates,
       caseNo,
       partyNameAppealant,
       partyNameRespondent,
@@ -43,7 +46,7 @@ citationRoute.post('/upload-citation', adminAuth, async (req, res) => {
 
     const newCitation = new Citation({
       institutionName,
-      apellateType,
+      apellates,
       caseNo,
       partyNameAppealant,
       partyNameRespondent,
@@ -77,26 +80,40 @@ citationRoute.post('/upload-citation', adminAuth, async (req, res) => {
   }
 })
 
-citationRoute.get('/pending-citations', adminAuth, async (req, res) => {
+citationRoute.get('/pending-citations', staffAuth, async (req, res) => {
   try {
     const pendingCitations = await Citation.find(
       { status: 'pending' },
-      '_id status title citationNo'
+      '_id status type title citationNo'
     )
 
-    res.status(200).json({ pendingCitations })
+    const pendingActs = await Act.find(
+      { status: 'pending' },
+      '_id status type title citationNo'
+    )
+
+    const allPendingCitations = [...pendingCitations, ...pendingActs]
+
+    res.status(200).json({ pendingCitations: allPendingCitations })
   } catch (error) {
     console.error(error)
     res.status(500).json({ error: 'Internal server error' })
   }
 })
 
-citationRoute.get('/approved-citations', adminAuth, async (req, res) => {
+citationRoute.get('/approved-citations', staffAuth, async (req, res) => {
   try {
-    const approvedCitations = await Citation.find(
+    const citations = await Citation.find(
       { status: 'approved' },
-      '_id status title citationNo'
+      '_id status type title citationNo'
     )
+
+    const acts = await Act.find(
+      { status: 'approved' },
+      '_id status type title citationNo'
+    )
+
+    const approvedCitations = [...citations, ...acts]
 
     res.status(200).json({ approvedCitations })
   } catch (error) {
@@ -107,10 +124,16 @@ citationRoute.get('/approved-citations', adminAuth, async (req, res) => {
 
 citationRoute.get('/citation/:id', userAuth, async (req, res) => {
   try {
-    const citation = await Citation.findById(req.params.id)
+    let citation = await Citation.findById(req.params.id)
+
+    if (!citation) {
+      citation = await Act.findById(req.params.id)
+    }
+
     if (!citation) {
       return res.status(404).json({ error: 'Citation not found' })
     }
+
     res.status(200).json({ citation })
   } catch (error) {
     console.error(error)
@@ -121,24 +144,37 @@ citationRoute.get('/citation/:id', userAuth, async (req, res) => {
 citationRoute.put('/approve-citation/:id', adminAuth, async (req, res) => {
   try {
     const citation = await Citation.findById(req.params.id)
-    if (!citation) {
+    const act = await Act.findById(req.params.id)
+    if (!citation && !act) {
       res.status(404).json({ error: 'Citation not found' })
     }
-    citation.status = 'approved'
-    await citation.save()
-    res.status(200).json({ message: 'Citation approved successfully' })
+
+    if (citation) {
+      citation.status = 'approved'
+      await citation.save()
+      res.status(200).json({ message: 'Citation approved successfully' })
+    } else {
+      act.status = 'approved'
+      await act.save()
+      res.status(200).json({ message: 'Act approved successfully' })
+    }
   } catch (error) {
     console.error(error)
     res.status(500).json({ error: 'Internal server error' })
   }
 })
 
-citationRoute.post('/get-laws-by-apellateType', async (req, res) => {
+citationRoute.post('/get-laws-by-apellateType', userAuth, async (req, res) => {
   try {
     const { apellateType } = req.body
 
+    // Convert apellateType to an array if it's not already
+    const apellateTypes = Array.isArray(apellateType)
+      ? apellateType
+      : [apellateType]
+
     const matchingLaws = await Citation.distinct('laws', {
-      apellateType: apellateType,
+      apellates: { $in: apellateTypes },
     })
 
     res.status(200).json({ laws: matchingLaws })
@@ -148,12 +184,12 @@ citationRoute.post('/get-laws-by-apellateType', async (req, res) => {
   }
 })
 
-citationRoute.post('/get-pointOfLaw-by-law', async (req, res) => {
+citationRoute.post('/get-pointOfLaw-by-law', userAuth, async (req, res) => {
   try {
     const { apellateType, law } = req.body
 
     const matchingPointOfLaw = await Citation.distinct('pointOfLaw', {
-      apellateType: apellateType,
+      apellates: apellateType,
       laws: law,
     })
 
@@ -164,20 +200,52 @@ citationRoute.post('/get-pointOfLaw-by-law', async (req, res) => {
   }
 })
 
-citationRoute.post('/get-citations-by-filter', async (req, res) => {
+citationRoute.post('/get-citations-by-filter', userAuth, async (req, res) => {
   try {
     const { apellateType, law, pointOfLaw } = req.body
 
     const filteredCitations = await Citation.find(
       {
-        apellateType: apellateType,
+        apellates: apellateType,
         laws: law,
         pointOfLaw: pointOfLaw,
       },
-      '_id citationNo title'
+      '_id citationNo title institutionName'
     )
 
     res.status(200).json({ citations: filteredCitations })
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ error: 'Internal server error' })
+  }
+})
+
+citationRoute.post('/citation-pdf', async (req, res) => {
+  const { htmlContent } = req.body
+  try {
+    const browser = await puppeteer.launch()
+    const page = await browser.newPage()
+    await page.setContent(htmlContent)
+    const pdfBuffer = await page.pdf({ format: 'A4' })
+    await browser.close()
+
+    res.setHeader('Content-Type', 'application/pdf')
+    res.setHeader('Content-Disposition', 'attachment; filename=generated.pdf')
+    res.send(pdfBuffer)
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ error: 'Internal server error' })
+  }
+})
+
+citationRoute.get('/last-10-citations', userAuth, async (req, res) => {
+  try {
+    const last10Citations = await Citation.find({})
+      .sort({ createdAt: -1 })
+      .limit(10)
+      .select('_id title citationNo createdAt')
+
+    res.status(200).json({ last10Citations })
   } catch (error) {
     console.error(error)
     res.status(500).json({ error: 'Internal server error' })

@@ -3,18 +3,29 @@ const contentsRoute = express.Router()
 const Contents = require('../Models/Contents')
 const Laws = require('../Models/Laws')
 const Citation = require('../Models/Citation')
+const Act = require('../Models/Acts')
 const Courts = require('../Models/Courts')
 const User = require('../Models/User')
+const ApellateType = require('../Models/ApellateType')
 const adminAuth = require('../Middleware/adminAuth')
+const staffAuth = require('../Middleware/staffAuth')
+const userAuth = require('../Middleware/userAuth')
 
-contentsRoute.get('/statistics', adminAuth, async (req, res) => {
+contentsRoute.get('/statistics', staffAuth, async (req, res) => {
   try {
-    const noOfApprovedCitation = await Citation.countDocuments({
+    const approvedCitations = await Citation.countDocuments({
       status: 'approved',
     })
-    const noOfPendingCitation = await Citation.countDocuments({
+    const pendingCitations = await Citation.countDocuments({
       status: 'pending',
     })
+
+    const approvedActs = await Act.countDocuments({ status: 'approved' })
+    const pendingActs = await Act.countDocuments({ status: 'pending' })
+
+    const noOfApprovedCitation = approvedCitations + approvedActs
+    const noOfPendingCitation = pendingCitations + pendingActs
+
     const noOfGuestUser = await User.countDocuments({ userType: 'guest' })
     const noOfStaffUser = await User.countDocuments({ userType: 'staff' })
 
@@ -99,7 +110,30 @@ contentsRoute.post('/add-courts', adminAuth, async (req, res) => {
   }
 })
 
-contentsRoute.get('/pol-list', adminAuth, async (req, res) => {
+contentsRoute.post('/add-apellate', adminAuth, async (req, res) => {
+  try {
+    const { name } = req.body
+
+    const existingContent = await ApellateType.findOne({ name })
+
+    if (existingContent) {
+      return res.status(400).json({ message: 'Apellate Type already exists' })
+    }
+
+    const newContent = new ApellateType({
+      name: name,
+    })
+
+    await newContent.save()
+
+    res.status(201).json({ message: 'Apellate Type added successfully' })
+  } catch (error) {
+    console.log(error)
+    res.status(500).json({ message: 'Internal server error' })
+  }
+})
+
+contentsRoute.get('/pol-list', staffAuth, async (req, res) => {
   try {
     const allPointsOfLaw = await Contents.find({}, 'name')
     res.status(200).json(allPointsOfLaw)
@@ -109,7 +143,7 @@ contentsRoute.get('/pol-list', adminAuth, async (req, res) => {
   }
 })
 
-contentsRoute.get('/court-list', adminAuth, async (req, res) => {
+contentsRoute.get('/court-list', staffAuth, async (req, res) => {
   try {
     const allCourts = await Courts.find({}, 'name')
     res.status(200).json(allCourts)
@@ -119,10 +153,20 @@ contentsRoute.get('/court-list', adminAuth, async (req, res) => {
   }
 })
 
-contentsRoute.get('/law-list', adminAuth, async (req, res) => {
+contentsRoute.get('/law-list', staffAuth, async (req, res) => {
   try {
     const allLaw = await Laws.find({}, 'name')
     res.status(200).json(allLaw)
+  } catch (error) {
+    console.log(error)
+    res.status(500).json({ message: 'Internal server error' })
+  }
+})
+
+contentsRoute.get('/apellate-list', userAuth, async (req, res) => {
+  try {
+    const allApellateTypes = await ApellateType.find({}, 'name')
+    res.status(200).json(allApellateTypes)
   } catch (error) {
     console.log(error)
     res.status(500).json({ message: 'Internal server error' })
@@ -162,6 +206,19 @@ contentsRoute.delete('/delete-court', adminAuth, async (req, res) => {
     await Courts.deleteMany({ _id: { $in: ids } })
 
     res.status(200).json({ message: 'Court deleted successfully' })
+  } catch (error) {
+    console.log(error)
+    res.status(500).json({ message: 'Internal server error' })
+  }
+})
+
+contentsRoute.delete('/delete-apellate', adminAuth, async (req, res) => {
+  try {
+    const { ids } = req.body
+
+    await ApellateType.deleteMany({ _id: { $in: ids } })
+
+    res.status(200).json({ message: 'Apellate type deleted successfully' })
   } catch (error) {
     console.log(error)
     res.status(500).json({ message: 'Internal server error' })

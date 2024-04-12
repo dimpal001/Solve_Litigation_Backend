@@ -5,6 +5,7 @@ const config = require('../Middleware/config')
 const userRoute = express.Router()
 const User = require('../Models/User')
 const userAuth = require('../Middleware/userAuth')
+const adminAuth = require('../Middleware/adminAuth')
 
 userRoute.post('/register', async (req, res) => {
   try {
@@ -76,8 +77,8 @@ userRoute.post('/login', async (req, res) => {
     // If the password is valid, generate a JWT token
     const token = jwt.sign(
       { userId: user._id, email: user.email },
-      config.SECRET_KEY, // Set your own secret key
-      { expiresIn: '1h' } // Token expires in 1 hour
+      config.SECRET_KEY,
+      { expiresIn: '1h' }
     )
 
     res.status(200).json({
@@ -150,6 +151,78 @@ userRoute.put('/update-details/:userId', userAuth, async (req, res) => {
     res.status(200).json({ message: 'User details updated successfully' })
   } catch (error) {
     console.log(error)
+    res.status(500).json({ message: 'Internal server error' })
+  }
+})
+
+userRoute.post('/create-staff', async (req, res) => {
+  try {
+    const { fullName, email, phoneNumber, password, address } = req.body
+
+    const isEmailExist = await User.findOne({ email })
+    if (isEmailExist) {
+      return res.status(401).json({ message: 'Email is already registered' })
+    }
+
+    const isMobileExist = await User.findOne({ phoneNumber })
+    if (isMobileExist) {
+      return res
+        .status(401)
+        .json({ message: 'Phone number is already registered' })
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10)
+
+    const staffUser = new User({
+      fullName,
+      email,
+      phoneNumber,
+      address,
+      password: hashedPassword,
+      userType: 'staff',
+    })
+
+    await staffUser.save()
+
+    res.status(201).json({ message: 'Staff user registered successfully' })
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ message: 'Internal server error' })
+  }
+})
+
+userRoute.get('/user-list', adminAuth, async (req, res) => {
+  try {
+    const UserList = await User.find({
+      $or: [{ userType: 'staff' }, { userType: 'admin' }],
+    }).select('_id fullName email phoneNumber userType')
+
+    res.status(200).json(UserList)
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ error: 'Internal server error' })
+  }
+})
+
+userRoute.delete('/delete-user/:userId', userAuth, async (req, res) => {
+  try {
+    const userId = req.params.userId
+
+    const userToDelete = await User.findById(userId)
+
+    if (!userToDelete) {
+      return res.status(404).json({ message: 'User not found' })
+    }
+
+    if (userToDelete.userType === 'admin') {
+      return res.status(403).json({ message: 'Admin user cannot be deleted' })
+    }
+
+    await User.findByIdAndDelete(userId)
+
+    res.status(200).json({ message: 'User deleted successfully' })
+  } catch (error) {
+    console.error(error)
     res.status(500).json({ message: 'Internal server error' })
   }
 })
