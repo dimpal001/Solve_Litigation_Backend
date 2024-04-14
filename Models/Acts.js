@@ -2,6 +2,7 @@ const mongoose = require('mongoose')
 
 const actSchema = new mongoose.Schema({
   institutionName: String,
+  index: String,
   type: {
     type: String,
     default: 'act',

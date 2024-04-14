@@ -2,6 +2,7 @@ const mongoose = require('mongoose')
 
 const citationSchema = new mongoose.Schema({
   institutionName: String,
+  index: String,
   apellates: [String],
   type: {
     type: String,

@@ -12,6 +12,7 @@ citationRoute.post('/upload-citation', staffAuth, async (req, res) => {
   try {
     const {
       institutionName,
+      index,
       apellates,
       caseNo,
       partyNameAppealant,
@@ -46,6 +47,7 @@ citationRoute.post('/upload-citation', staffAuth, async (req, res) => {
 
     const newCitation = new Citation({
       institutionName,
+      index,
       apellates,
       caseNo,
       partyNameAppealant,

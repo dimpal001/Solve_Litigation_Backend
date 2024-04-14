@@ -6,7 +6,8 @@ const actRoute = express.Router()
 
 actRoute.post('/upload-act', adminAuth, async (req, res) => {
   try {
-    const { institutionName, title, judgments, notification } = req.body.actData
+    const { institutionName, index, title, judgments, notification } =
+      req.body.actData
 
     const currentYear = new Date().getFullYear()
 
@@ -23,6 +24,7 @@ actRoute.post('/upload-act', adminAuth, async (req, res) => {
 
     const newAct = new Acts({
       institutionName,
+      index,
       title,
       judgments,
       citationNo,
