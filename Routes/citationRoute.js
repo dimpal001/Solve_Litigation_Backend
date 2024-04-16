@@ -82,21 +82,103 @@ citationRoute.post('/upload-citation', staffAuth, async (req, res) => {
   }
 })
 
+citationRoute.put('/update-citation/:id', staffAuth, async (req, res) => {
+  try {
+    const citationId = req.params.id
+    const updatedCitationData = req.body.citationData
+
+    const isNormalCitation = await Citation.exists({ _id: citationId })
+
+    if (isNormalCitation) {
+      updatedCitationData.status = 'pending'
+      updatedCitationData.lastModifiedDate = new Date()
+
+      const updatedCitation = await Citation.findByIdAndUpdate(
+        citationId,
+        updatedCitationData,
+        { new: true }
+      )
+
+      if (!updatedCitation) {
+        return res.status(404).json({ error: 'Citation not found' })
+      }
+
+      return res.status(200).json({ message: 'Citation updated successfully' })
+    }
+
+    const isActCitation = await Act.exists({ _id: citationId })
+
+    if (isActCitation) {
+      updatedCitationData.status = 'pending'
+      updatedCitationData.lastModifiedDate = new Date()
+
+      const updatedAct = await Act.findByIdAndUpdate(
+        citationId,
+        updatedCitationData,
+        { new: true }
+      )
+
+      if (!updatedAct) {
+        return res.status(404).json({ error: 'Act not found' })
+      }
+
+      return res.status(200).json({ message: 'Act updated successfully' })
+    }
+
+    return res.status(404).json({ error: 'Citation or Act not found' })
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ error: 'Internal server error' })
+  }
+})
+
+citationRoute.delete('/delete-citation/:id', staffAuth, async (req, res) => {
+  try {
+    const citationId = req.params.id
+
+    const citation = await Citation.findById(citationId)
+    if (citation) {
+      await Citation.findByIdAndDelete(citationId)
+      return res.status(200).json({ message: 'Citation deleted successfully' })
+    }
+
+    const act = await Act.findById(citationId)
+    if (act) {
+      await Act.findByIdAndDelete(citationId)
+      return res
+        .status(200)
+        .json({ message: 'Act citation deleted successfully' })
+    }
+
+    return res.status(404).json({ error: 'Citation not found' })
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ error: 'Internal server error' })
+  }
+})
+
 citationRoute.get('/pending-citations', staffAuth, async (req, res) => {
   try {
     const pendingCitations = await Citation.find(
       { status: 'pending' },
-      '_id status type title citationNo'
+      '_id status type citationNo title dateOfOrder institutionName lastModifiedDate'
     )
 
     const pendingActs = await Act.find(
       { status: 'pending' },
-      '_id status type title citationNo'
+      '_id status institutionName type title citationNo'
     )
 
     const allPendingCitations = [...pendingCitations, ...pendingActs]
 
-    res.status(200).json({ pendingCitations: allPendingCitations })
+    const truncatedCitations = allPendingCitations.map((citation) => {
+      if (citation.judgments && citation.judgments.length > 150) {
+        citation.judgments = citation.judgments.substring(0, 150)
+      }
+      return citation
+    })
+
+    res.status(200).json({ pendingCitations: truncatedCitations })
   } catch (error) {
     console.error(error)
     res.status(500).json({ error: 'Internal server error' })
@@ -107,7 +189,7 @@ citationRoute.get('/approved-citations', staffAuth, async (req, res) => {
   try {
     const citations = await Citation.find(
       { status: 'approved' },
-      '_id status type title citationNo'
+      '_id status type citationNo title dateOfOrder institutionName lastModifiedDate'
     )
 
     const acts = await Act.find(
@@ -117,7 +199,14 @@ citationRoute.get('/approved-citations', staffAuth, async (req, res) => {
 
     const approvedCitations = [...citations, ...acts]
 
-    res.status(200).json({ approvedCitations })
+    const truncatedCitations = approvedCitations.map((citation) => {
+      if (citation.judgments && citation.judgments.length > 150) {
+        citation.judgments = citation.judgments.substring(0, 150)
+      }
+      return citation
+    })
+
+    res.status(200).json({ approvedCitations: truncatedCitations })
   } catch (error) {
     console.error(error)
     res.status(500).json({ error: 'Internal server error' })
@@ -212,10 +301,17 @@ citationRoute.post('/get-citations-by-filter', userAuth, async (req, res) => {
         laws: law,
         pointOfLaw: pointOfLaw,
       },
-      '_id citationNo title institutionName'
+      '_id status type citationNo title dateOfOrder institutionName lastModifiedDate'
     )
 
-    res.status(200).json({ citations: filteredCitations })
+    const truncatedCitations = filteredCitations.map((citation) => {
+      if (citation.judgments && citation.judgments.length > 150) {
+        citation.judgments = citation.judgments.substring(0, 150)
+      }
+      return citation
+    })
+
+    res.status(200).json({ citations: truncatedCitations })
   } catch (error) {
     console.error(error)
     res.status(500).json({ error: 'Internal server error' })
@@ -245,9 +341,16 @@ citationRoute.get('/last-10-citations', userAuth, async (req, res) => {
     const last10Citations = await Citation.find({})
       .sort({ createdAt: -1 })
       .limit(10)
-      .select('_id title citationNo createdAt')
+      .select('_id title dateOfOrder laws institutionName judgments createdAt')
 
-    res.status(200).json({ last10Citations })
+    const truncatedCitations = last10Citations.map((citation) => {
+      if (citation.judgments && citation.judgments.length > 150) {
+        citation.judgments = citation.judgments.substring(0, 150)
+      }
+      return citation
+    })
+
+    res.status(200).json({ last10Citations: truncatedCitations })
   } catch (error) {
     console.error(error)
     res.status(500).json({ error: 'Internal server error' })

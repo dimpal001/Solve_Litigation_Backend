@@ -128,7 +128,7 @@ filterRoute.get(
             $lt: new Date(year, month - 1, day + 1),
           },
         },
-        '_id title status'
+        '_id status type citationNo title dateOfOrder institutionName lastModifiedDate'
       )
 
       res.status(200).json({ citations })

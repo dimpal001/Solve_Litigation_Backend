@@ -6,7 +6,7 @@ const citationSchema = new mongoose.Schema({
   apellates: [String],
   type: {
     type: String,
-    default: 'Orders',
+    default: 'order',
   },
   caseNo: String,
   partyNameAppealant: String,
