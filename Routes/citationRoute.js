@@ -34,8 +34,6 @@ citationRoute.post('/upload-citation', staffAuth, async (req, res) => {
 
     // Generate citation number
     const year = new Date(dateOfOrder).getFullYear()
-    console.log(year)
-    console.log(dateOfOrder)
     const count = await Citation.countDocuments({
       dateOfOrder: {
         $gte: new Date(`${year}-01-01`),
@@ -43,7 +41,17 @@ citationRoute.post('/upload-citation', staffAuth, async (req, res) => {
       },
     })
     const sequenceNo = String(count + 1).padStart(3, '0')
-    const citationNo = `${year}-SL-${sequenceNo}`
+
+    let abbreviation = ''
+    if (institutionName.toLowerCase().includes('supreme court')) {
+      abbreviation = 'SC'
+    } else if (institutionName.toLowerCase().includes('high court')) {
+      abbreviation = 'HC'
+    } else if (institutionName.toLowerCase().includes('tribunal')) {
+      abbreviation = 'TR'
+    }
+
+    const citationNo = `${year}-SL-${abbreviation}-${sequenceNo}`
 
     const newCitation = new Citation({
       institutionName,
@@ -74,7 +82,6 @@ citationRoute.post('/upload-citation', staffAuth, async (req, res) => {
 
     const savedCitation = await newCitation.save()
 
-    // Send success message
     res.status(201).json({ message: 'Citation uploaded successfully' })
   } catch (error) {
     console.error(error)
@@ -90,6 +97,16 @@ citationRoute.put('/update-citation/:id', staffAuth, async (req, res) => {
     const isNormalCitation = await Citation.exists({ _id: citationId })
 
     if (isNormalCitation) {
+      if ('institutionName' in updatedCitationData) {
+        const abbreviation = getAbbreviation(
+          updatedCitationData.institutionName
+        )
+        if (!abbreviation) {
+          return res.status(400).json({ error: 'Invalid institutionName' })
+        }
+        updatedCitationData.citationNo = await generateCitationNo(abbreviation)
+      }
+
       updatedCitationData.status = 'pending'
       updatedCitationData.lastModifiedDate = new Date()
 
@@ -109,6 +126,16 @@ citationRoute.put('/update-citation/:id', staffAuth, async (req, res) => {
     const isActCitation = await Act.exists({ _id: citationId })
 
     if (isActCitation) {
+      if ('institutionName' in updatedCitationData) {
+        const abbreviation = getAbbreviation(
+          updatedCitationData.institutionName
+        )
+        if (!abbreviation) {
+          return res.status(400).json({ error: 'Invalid institutionName' })
+        }
+        updatedCitationData.citationNo = await generateCitationNo(abbreviation)
+      }
+
       updatedCitationData.status = 'pending'
       updatedCitationData.lastModifiedDate = new Date()
 
@@ -131,6 +158,29 @@ citationRoute.put('/update-citation/:id', staffAuth, async (req, res) => {
     res.status(500).json({ error: 'Internal server error' })
   }
 })
+
+async function generateCitationNo(abbreviation) {
+  const year = new Date().getFullYear()
+  const count = await Citation.countDocuments({
+    dateOfOrder: {
+      $gte: new Date(`${year}-01-01`),
+      $lt: new Date(`${year + 1}-01-01`),
+    },
+  })
+  const sequenceNo = String(count + 1).padStart(3, '0')
+  return `${year}-SL-${abbreviation}-${sequenceNo}`
+}
+
+function getAbbreviation(institutionName) {
+  if (institutionName.toLowerCase().includes('supreme court')) {
+    return 'SC'
+  } else if (institutionName.toLowerCase().includes('high court')) {
+    return 'HC'
+  } else if (institutionName.toLowerCase().includes('tribunal')) {
+    return 'TR'
+  }
+  return null
+}
 
 citationRoute.delete('/delete-citation/:id', staffAuth, async (req, res) => {
   try {
@@ -301,7 +351,7 @@ citationRoute.post('/get-citations-by-filter', userAuth, async (req, res) => {
         laws: law,
         pointOfLaw: pointOfLaw,
       },
-      '_id status type citationNo title dateOfOrder institutionName lastModifiedDate'
+      '_id status type citationNo title laws dateOfOrder institutionName lastModifiedDate'
     )
 
     const truncatedCitations = filteredCitations.map((citation) => {

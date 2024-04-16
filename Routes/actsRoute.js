@@ -11,6 +11,11 @@ actRoute.post('/upload-act', adminAuth, async (req, res) => {
 
     const currentYear = new Date().getFullYear()
 
+    const abbreviation = getAbbreviation(institutionName)
+    if (!abbreviation) {
+      return res.status(400).json({ error: 'Invalid institutionName' })
+    }
+
     const count = await Acts.countDocuments({
       createdAt: {
         $gte: new Date(`${currentYear}-01-01`),
@@ -20,7 +25,7 @@ actRoute.post('/upload-act', adminAuth, async (req, res) => {
 
     const serialNumber = String(count + 1).padStart(3, '0')
 
-    const citationNo = `${currentYear}-SL-${serialNumber}`
+    const citationNo = `${currentYear}-SL-${abbreviation}-${serialNumber}`
 
     const newAct = new Acts({
       institutionName,
@@ -43,5 +48,16 @@ actRoute.post('/upload-act', adminAuth, async (req, res) => {
     res.status(500).json({ error: 'Internal server error' })
   }
 })
+
+function getAbbreviation(institutionName) {
+  if (institutionName.toLowerCase().includes('supreme court')) {
+    return 'SC'
+  } else if (institutionName.toLowerCase().includes('high court')) {
+    return 'HC'
+  } else if (institutionName.toLowerCase().includes('tribunal')) {
+    return 'TR'
+  }
+  return null
+}
 
 module.exports = actRoute
