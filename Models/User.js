@@ -1,3 +1,4 @@
+const { verify } = require('jsonwebtoken')
 const mongoose = require('mongoose')
 const userSchema = new mongoose.Schema({
   fullName: String,
@@ -9,6 +10,10 @@ const userSchema = new mongoose.Schema({
   userType: String,
   registrationType: String,
   address: String,
+  isVerified: { type: Boolean, default: false },
+  isBlocked: { type: Boolean, default: false },
+  verificationToken: String,
+  resetPasswordToken: String,
 })
 
 const User = mongoose.model('User', userSchema)
