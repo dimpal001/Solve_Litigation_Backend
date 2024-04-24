@@ -1,4 +1,5 @@
 const mongoose = require('mongoose')
+
 const userSchema = new mongoose.Schema({
   fullName: String,
   email: { type: String, unique: true, required: true },
@@ -9,6 +10,11 @@ const userSchema = new mongoose.Schema({
   userType: String,
   registrationType: String,
   address: String,
+  selectedService: {
+    type: [String],
+    enum: ['judgments', 'legalAdvice', 'studyResources'],
+    default: [],
+  },
 })
 
 const User = mongoose.model('User', userSchema)

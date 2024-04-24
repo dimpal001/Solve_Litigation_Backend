@@ -43,6 +43,7 @@ userRoute.post('/register', async (req, res) => {
       district,
       password: hashedPassword,
       userType: 'guest',
+      selectedService: [],
     })
 
     await user.save()
@@ -194,7 +195,11 @@ userRoute.post('/create-staff', async (req, res) => {
 userRoute.get('/user-list', adminAuth, async (req, res) => {
   try {
     const UserList = await User.find({
-      $or: [{ userType: 'staff' }, { userType: 'admin' }],
+      $or: [
+        { userType: 'staff' },
+        { userType: 'admin' },
+        { userType: 'guest' },
+      ],
     }).select('_id fullName email phoneNumber userType')
 
     res.status(200).json(UserList)
@@ -221,6 +226,53 @@ userRoute.delete('/delete-user/:userId', userAuth, async (req, res) => {
     await User.findByIdAndDelete(userId)
 
     res.status(200).json({ message: 'User deleted successfully' })
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ message: 'Internal server error' })
+  }
+})
+
+userRoute.put(
+  '/update-selected-service/:userId',
+  userAuth,
+  async (req, res) => {
+    try {
+      const userId = req.params.userId
+      const { selectedService } = req.body
+
+      const user = await User.findById(userId)
+
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' })
+      }
+
+      user.selectedService = selectedService
+
+      await user.save()
+
+      res
+        .status(200)
+        .json({ message: 'Selected services updated successfully' })
+    } catch (error) {
+      console.error(error)
+      res.status(500).json({ message: 'Internal server error' })
+    }
+  }
+)
+
+userRoute.get('/get-selected-service/:userId', userAuth, async (req, res) => {
+  try {
+    const userId = req.params.userId
+
+    const user = await User.findById(userId)
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' })
+    }
+
+    const selectedService = user.selectedService
+
+    res.status(200).json({ selectedService })
   } catch (error) {
     console.error(error)
     res.status(500).json({ message: 'Internal server error' })
