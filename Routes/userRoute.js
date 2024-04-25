@@ -47,7 +47,7 @@ userRoute.post('/register', async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10)
 
-    const token = jwt.sign({ email }, config.SECRET_KEY, { expiresIn: '1h' })
+    const token = jwt.sign({ email }, config.SECRET_KEY, { expiresIn: '2h' })
 
     const user = new User({
       fullName,
@@ -74,6 +74,33 @@ userRoute.post('/register', async (req, res) => {
 })
 
 
+// Route to send reverification email
+userRoute.post('/reverify-email', async (req, res) => {
+  try {
+    const { email } = req.body
+
+    const user = await User.findOne({ email } && { isVerified: false })
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' })
+    }
+
+    const token = jwt.sign({ email }, config.SECRET_KEY, { expiresIn: '2h' })
+
+    user.verificationToken = token
+
+    await user.save()
+
+    // Send verification email
+    await sendVerificationEmail(email, token)
+
+    res.status(200).json({ message: 'Verification email sent' })
+  } catch (error) {
+    console.log(error)
+    res.status(500).json({ message: 'Internal server error' })
+  }
+
+})
 
 
 userRoute.post('/login', async (req, res) => {
