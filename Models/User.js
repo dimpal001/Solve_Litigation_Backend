@@ -15,6 +15,7 @@ const userSchema = new mongoose.Schema({
     enum: ['judgments', 'legalAdvice', 'studyResources'],
     default: [],
   },
+  isEmailVerified: { type: Boolean, default: false },
 })
 
 const User = mongoose.model('User', userSchema)
