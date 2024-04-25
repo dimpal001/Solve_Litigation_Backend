@@ -6,7 +6,9 @@ const userRoute = express.Router()
 const User = require('../Models/User')
 const userAuth = require('../Middleware/userAuth')
 const adminAuth = require('../Middleware/adminAuth')
+const { sendVerificationEmail, sendResetPasswordEmail } = require('../utils/registrationVerificationMail')
 
+// route to register a new user and send a verification email
 userRoute.post('/register', async (req, res) => {
   try {
     const {
@@ -21,32 +23,49 @@ userRoute.post('/register', async (req, res) => {
 
     const isEmailExist = await User.findOne({ email })
 
-    if (isEmailExist) {
+    if (isEmailExist && isEmailExist.isVerified === true) {
       return res.status(401).json({ message: 'Email is already registered' })
     }
 
     const isMobileExist = await User.findOne({ phoneNumber })
 
-    if (isMobileExist) {
+    if (isMobileExist && isMobileExist.isVerified === true) {
       return res
         .status(401)
         .json({ message: 'Mobile number is already registered' })
     }
+
+    if (isEmailExist && isEmailExist.isVerified === false) {
+      await User.findByIdAndDelete(isEmailExist._id)
+    }
+
+    if (isMobileExist && isMobileExist.isVerified === false) {
+      await User.findByIdAndDelete(isMobileExist._id)
+    }
+
+
+
     const hashedPassword = await bcrypt.hash(password, 10)
+
+    const token = jwt.sign({ email }, config.SECRET_KEY, { expiresIn: '2h' })
 
     const user = new User({
       fullName,
       email,
       phoneNumber,
+      password: hashedPassword,
       registrationType,
       state,
       district,
-      password: hashedPassword,
       userType: 'guest',
       selectedService: [],
+      verificationToken: token,
     })
 
     await user.save()
+
+    // Send verification email
+    await sendVerificationEmail(email, token)
 
     res.status(201).json({ message: 'User registered successfully' })
   } catch (error) {
@@ -54,6 +73,36 @@ userRoute.post('/register', async (req, res) => {
     res.status(500).json({ message: 'Internal server error' })
   }
 })
+
+
+// Route to send reverification email
+userRoute.post('/reverify-email', async (req, res) => {
+  try {
+    const { email } = req.body
+
+    const user = await User.findOne({ email } && { isVerified: false })
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' })
+    }
+
+    const token = jwt.sign({ email }, config.SECRET_KEY, { expiresIn: '2h' })
+
+    user.verificationToken = token
+
+    await user.save()
+
+    // Send verification email
+    await sendVerificationEmail(email, token)
+
+    res.status(200).json({ message: 'Verification email sent' })
+  } catch (error) {
+    console.log(error)
+    res.status(500).json({ message: 'Internal server error' })
+  }
+
+})
+
 
 userRoute.post('/login', async (req, res) => {
   try {
@@ -93,6 +142,35 @@ userRoute.post('/login', async (req, res) => {
     res.status(500).json({ message: 'Internal server error' })
   }
 })
+
+
+// forgot password
+userRoute.post('/forgot-password', async (req, res) => {
+  try {
+    const { email } = req.body
+
+    const user = await User.findOne({ email })
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' })
+    }
+
+    const token = jwt.sign({ email }, config.SECRET_KEY, { expiresIn: '1h' })
+
+    user.resetPasswordToken = token
+
+    await user.save()
+
+    // Send reset password email
+    await sendResetPasswordEmail(email, token)
+
+    res.status(200).json({ message: 'Password reset link sent to your email' })
+  } catch (error) {
+    console.log(error)
+    res.status(500).json({ message: 'Internal server error' })
+  }
+})
+
 
 userRoute.get('/user-details/:userId', async (req, res) => {
   try {

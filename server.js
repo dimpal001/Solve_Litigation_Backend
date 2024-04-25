@@ -9,6 +9,7 @@ const contentsRoute = require('./Routes/contentsRoute')
 const citationRoute = require('./Routes/citationRoute')
 const actsRoute = require('./Routes/actsRoute')
 const filterRoute = require('./Routes/filterRoute')
+const verificationRouter = require('./Routes/verificationRoute')
 
 const app = express()
 
@@ -36,6 +37,7 @@ app.use('/api/solve_litigation/contents/', contentsRoute)
 app.use('/api/solve_litigation/citation/', citationRoute)
 app.use('/api/solve_litigation/act/', actsRoute)
 app.use('/api/solve_litigation/filter/', filterRoute)
+app.use('/api/solve_litigation/verification/', verificationRouter)
 
 const PORT = process.env.PORT || 3000
 app.listen(PORT, () => {

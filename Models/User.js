@@ -1,3 +1,4 @@
+const { verify } = require('jsonwebtoken')
 const mongoose = require('mongoose')
 
 const userSchema = new mongoose.Schema({
@@ -15,7 +16,10 @@ const userSchema = new mongoose.Schema({
     enum: ['judgments', 'legalAdvice', 'studyResources'],
     default: [],
   },
-  isEmailVerified: { type: Boolean, default: false },
+  isVerified: { type: Boolean, default: false },
+  isBlocked: { type: Boolean, default: false },
+  verificationToken: String,
+  resetPasswordToken: String,
 })
 
 const User = mongoose.model('User', userSchema)
