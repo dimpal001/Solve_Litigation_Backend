@@ -396,14 +396,11 @@ citationRoute.get('/last-10-citations', userAuth, async (req, res) => {
     const truncatedCitations = last10Citations.map((citation) => {
       if (citation.headNote) {
         // Convert HTML to plain text
-        const plainTextHeadNote = citation.headNote.replace(
-          /<\/?[^>]+(>|$)/g,
-          ''
-        )
-        // Truncate to first 150 characters
-        citation.headNote = plainTextHeadNote.substring(0, 150)
-        // Add "..." if the headNote exceeds 150 characters
-        if (plainTextHeadNote.length > 150) {
+        const plainTextHeadNote = citation.headNote
+          .replace(/<\/?[^>]+(>|$)/g, '')
+          .replace(/&nbsp;/g, ' ')
+        citation.headNote = plainTextHeadNote.substring(0, 200)
+        if (plainTextHeadNote.length > 200) {
           citation.headNote += '...'
         }
       }
