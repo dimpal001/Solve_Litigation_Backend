@@ -394,8 +394,18 @@ citationRoute.get('/last-10-citations', userAuth, async (req, res) => {
       .select('_id title dateOfOrder laws institutionName headNote createdAt')
 
     const truncatedCitations = last10Citations.map((citation) => {
-      if (citation.headNote && citation.headNote.length > 270) {
-        citation.headNote = citation.headNote.substring(0, 270)
+      if (citation.headNote) {
+        // Convert HTML to plain text
+        const plainTextHeadNote = citation.headNote.replace(
+          /<\/?[^>]+(>|$)/g,
+          ''
+        )
+        // Truncate to first 150 characters
+        citation.headNote = plainTextHeadNote.substring(0, 150)
+        // Add "..." if the headNote exceeds 150 characters
+        if (plainTextHeadNote.length > 150) {
+          citation.headNote += '...'
+        }
       }
       return citation
     })
