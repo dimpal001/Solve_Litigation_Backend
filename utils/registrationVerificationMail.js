@@ -22,7 +22,7 @@ const sendVerificationEmail = async (email, token) => {
         <head>
           <meta charset="UTF-8" />
           <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-          <title>Email Verification</title>
+          <title>Account Verification</title>
           <style>
             /* Reset styles */
             body,
@@ -40,13 +40,9 @@ const sendVerificationEmail = async (email, token) => {
       
             /* Container styles */
             .container {
-              display: flex;
-              flex-direction: column;
-              justify-content: center;
-              align-items: center;
               max-width: 600px;
               margin: 20px auto;
-              padding: 50px;
+              padding: 30px;
               padding-top: 50px;
               padding-bottom: 50px;
               border: 1px solid #e0e0e0;
@@ -68,14 +64,7 @@ const sendVerificationEmail = async (email, token) => {
             }
       
             .text {
-              font-size: 14px;
-              text-align: center;
-            }
-      
-            .img {
-              display: flex;
-              justify-content: center;
-              padding-bottom: 15px;
+              font-size: 13px;
             }
       
             /* Button hover effect */
@@ -86,20 +75,17 @@ const sendVerificationEmail = async (email, token) => {
         </head>
         <body>
           <div class="container">
-            <div class="img">
-              <img src="https://i.postimg.cc/j290h1y6/logo-1.png" alt="" />
-            </div>
-            <h1>Account Verification</h1>
+            <h1>Email Verification</h1>
             <p class="text">Dear User,</p>
             <p class="text">
               Thank you for signing up with <strong>Solve Litigation</strong>. Please
               click the button below to verify your account
             </p>
             <a href="https://www.solvelitigation.com/verify-email/${token}"
-              ><button class="button">Verify Account</button></a
+              ><button class="button">Verify Email</button></a
             >
             <p style="margin-bottom: 20px">
-              Best regards, <strong>Solve Litigation</strong>
+              Best regards,<br /><strong>Solve Litigation</strong>
             </p>
           </div>
         </body>
@@ -154,13 +140,9 @@ const sendResetPasswordEmail = async (email, token) => {
       
             /* Container styles */
             .container {
-              display: flex;
-              flex-direction: column;
-              justify-content: center;
-              align-items: center;
               max-width: 600px;
               margin: 20px auto;
-              padding: 50px;
+              padding: 30px;
               padding-top: 50px;
               padding-bottom: 50px;
               border: 1px solid #e0e0e0;
@@ -182,14 +164,7 @@ const sendResetPasswordEmail = async (email, token) => {
             }
       
             .text {
-              font-size: 14px;
-              text-align: center;
-            }
-      
-            .img {
-              display: flex;
-              justify-content: center;
-              padding-bottom: 15px;
+              font-size: 13px;
             }
       
             /* Button hover effect */
@@ -200,9 +175,6 @@ const sendResetPasswordEmail = async (email, token) => {
         </head>
         <body>
           <div class="container">
-            <div class="img">
-              <img src="https://i.postimg.cc/j290h1y6/logo-1.png" alt="" />
-            </div>
             <h1>Reset Password</h1>
             <p class="text">Dear User,</p>
             <p class="text">
@@ -212,9 +184,7 @@ const sendResetPasswordEmail = async (email, token) => {
             <a href="https://www.solvelitigation.com/reset-password/${token}"
               ><button class="button">Reset Password</button></a
             >
-            <p style="margin-bottom: 20px">
-              Best regards, <strong>Solve Litigation</strong>
-            </p>
+            <p>Best regards,<br /><strong>Solve Litigation</strong></p>
           </div>
         </body>
       </html>
