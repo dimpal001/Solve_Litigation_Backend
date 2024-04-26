@@ -309,13 +309,13 @@ citationRoute.post('/get-laws-by-apellateType', userAuth, async (req, res) => {
   try {
     const { apellateType } = req.body
 
-    // Convert apellateType to an array if it's not already
     const apellateTypes = Array.isArray(apellateType)
       ? apellateType
       : [apellateType]
 
     const matchingLaws = await Citation.distinct('laws', {
       apellates: { $in: apellateTypes },
+      status: 'approved',
     })
 
     res.status(200).json({ laws: matchingLaws })
@@ -332,6 +332,7 @@ citationRoute.post('/get-pointOfLaw-by-law', userAuth, async (req, res) => {
     const matchingPointOfLaw = await Citation.distinct('pointOfLaw', {
       apellates: apellateType,
       laws: law,
+      status: 'approved',
     })
 
     res.status(200).json({ pointOfLaw: matchingPointOfLaw })
@@ -350,13 +351,20 @@ citationRoute.post('/get-citations-by-filter', userAuth, async (req, res) => {
         apellates: apellateType,
         laws: law,
         pointOfLaw: pointOfLaw,
+        status: 'approved',
       },
-      '_id status type citationNo title laws dateOfOrder institutionName lastModifiedDate'
+      '_id status type citationNo title laws dateOfOrder institutionName lastModifiedDate headNote'
     )
 
     const truncatedCitations = filteredCitations.map((citation) => {
-      if (citation.judgments && citation.judgments.length > 150) {
-        citation.judgments = citation.judgments.substring(0, 150)
+      if (citation.headNote) {
+        const plainTextHeadNote = citation.headNote
+          .replace(/<\/?[^>]+(>|$)/g, '')
+          .replace(/&nbsp;/g, ' ')
+        citation.headNote = plainTextHeadNote.substring(0, 200)
+        if (plainTextHeadNote.length > 200) {
+          citation.headNote += '...'
+        }
       }
       return citation
     })
@@ -388,26 +396,25 @@ citationRoute.post('/citation-pdf', async (req, res) => {
 
 citationRoute.get('/last-10-citations', userAuth, async (req, res) => {
   try {
-    const last10Citations = await Citation.find({})
+    const last10ApprovedCitations = await Citation.find({ status: 'approved' })
       .sort({ createdAt: -1 })
       .limit(10)
       .select('_id title dateOfOrder laws institutionName headNote createdAt')
 
-    const truncatedCitations = last10Citations.map((citation) => {
+    const truncatedCitations = last10ApprovedCitations.map((citation) => {
       if (citation.headNote) {
-        // Convert HTML to plain text
         const plainTextHeadNote = citation.headNote
           .replace(/<\/?[^>]+(>|$)/g, '')
           .replace(/&nbsp;/g, ' ')
-        citation.headNote = plainTextHeadNote.substring(0, 200)
-        if (plainTextHeadNote.length > 200) {
+        citation.headNote = plainTextHeadNote.substring(0, 150)
+        if (plainTextHeadNote.length > 150) {
           citation.headNote += '...'
         }
       }
       return citation
     })
 
-    res.status(200).json({ last10Citations: truncatedCitations })
+    res.status(200).json({ last10ApprovedCitations: truncatedCitations })
   } catch (error) {
     console.error(error)
     res.status(500).json({ error: 'Internal server error' })
