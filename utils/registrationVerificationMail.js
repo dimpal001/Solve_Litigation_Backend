@@ -76,7 +76,7 @@ const sendVerificationEmail = async (email, token) => {
               Thank you for signing up with <strong>Solve Litigation</strong>. Please
               click the button below to verify your email address:
             </p>
-            <a href="https:/solvelitigation.com/verify-email/${token}" class="button"
+            <a href="https://www.solvelitigation.com/verify-email/${token}" class="button"
               >Verify Email</a
             >
             <p>Best regards,<br /><strong>Solve Litigation</strong></p>
@@ -169,7 +169,7 @@ const sendResetPasswordEmail = async (email, token) => {
           <p>
             Click on the button below to reset your password
           </p>
-          <a href="https:/solvelitigation.com/reset-password/${token}" class="button"
+          <a href="https://www.solvelitigation.com/reset-password/${token}" class="button"
             >Reset Password</a
           >
           <p>Best regards,<br /><strong>Solve Litigation</strong></p>
