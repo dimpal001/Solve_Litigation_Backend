@@ -414,7 +414,7 @@ citationRoute.get('/last-10-citations', userAuth, async (req, res) => {
       return citation
     })
 
-    res.status(200).json({ last10ApprovedCitations: truncatedCitations })
+    res.status(200).json({ last10Citations: truncatedCitations })
   } catch (error) {
     console.error(error)
     res.status(500).json({ error: 'Internal server error' })
