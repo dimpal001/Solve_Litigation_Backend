@@ -76,7 +76,7 @@ const sendVerificationEmail = async (email, token) => {
         <body>
           <div class="container">
             <h1>Email Verification</h1>
-            <p>Dear User,</p>
+            <p class="text">Dear User,</p>
             <p class="text">
               Thank you for signing up with <strong>Solve Litigation</strong>. Please
               click the button below to verify your email address:
@@ -151,12 +151,12 @@ const sendResetPasswordEmail = async (email, token) => {
       
             /* Button styles */
             .button {
-              font-weight: bold;
-              display: inline-block;
               font-size: 16px;
-              margin-bottom: 10px;
+              font-weight: bold;
+              margin-top: 15px;
+              margin-bottom: 15px;
+              border-color: transparent;
               padding: 12px 24px;
-              margin-top: 20px;
               background-color: #007bff;
               color: white;
               text-decoration: none;
@@ -176,15 +176,13 @@ const sendResetPasswordEmail = async (email, token) => {
         <body>
           <div class="container">
             <h1>Reset Password</h1>
-            <p>Dear User,</p>
+            <p class="text">Dear User,</p>
             <p class="text">
               A password reset has been requested for your account. If this was you,
               please use the link below to reset your password.
             </p>
-            <a
-              href="https://www.solvelitigation.com/reset-password/${token}"
-              class="button"
-              >Reset Password</a
+            <a href="https://www.solvelitigation.com/reset-password/${token}"
+              ><button class="button">Reset Password</button></a
             >
             <p>Best regards,<br /><strong>Solve Litigation</strong></p>
           </div>
