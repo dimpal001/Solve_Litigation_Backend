@@ -394,8 +394,8 @@ citationRoute.get('/last-10-citations', userAuth, async (req, res) => {
       .select('_id title dateOfOrder laws institutionName headNote createdAt')
 
     const truncatedCitations = last10Citations.map((citation) => {
-      if (citation.headNote && citation.headNote.length > 150) {
-        citation.headNote = citation.headNote.substring(0, 150)
+      if (citation.headNote && citation.headNote.length > 270) {
+        citation.headNote = citation.headNote.substring(0, 270)
       }
       return citation
     })
