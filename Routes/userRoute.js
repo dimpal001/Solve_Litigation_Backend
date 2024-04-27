@@ -66,7 +66,7 @@ userRoute.post('/register', async (req, res) => {
     await user.save()
 
     // Send verification email
-    await sendVerificationEmail(email, token)
+    await sendVerificationEmail(email, token, user.fullName)
 
     res.status(201).json({ message: 'User registered successfully' })
   } catch (error) {
@@ -92,7 +92,7 @@ userRoute.post('/reverify-email/:email', async (req, res) => {
 
     await user.save()
 
-    await sendVerificationEmail(email, token)
+    await sendVerificationEmail(email, token, user.fullName)
 
     res.status(200).json({
       message: 'Verification mail sent to your registered email address',
@@ -161,7 +161,7 @@ userRoute.post('/reset-password/:email', async (req, res) => {
 
     await user.save()
 
-    await sendResetPasswordEmail(email, token)
+    await sendResetPasswordEmail(email, token, user.fullName)
 
     res.status(200).json({
       message: 'Password reset link sent to your email',

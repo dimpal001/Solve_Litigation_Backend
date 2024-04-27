@@ -1,6 +1,6 @@
 const nodemailer = require('nodemailer')
 
-const sendVerificationEmail = async (email, token) => {
+const sendVerificationEmail = async (email, token, name) => {
   try {
     const transporter = nodemailer.createTransport({
       host: 'smtp.hostinger.com',
@@ -34,7 +34,7 @@ const sendVerificationEmail = async (email, token) => {
             }
       
             h1 {
-              padding-bottom: 20px;
+              padding-bottom: 25px;
               font-size: 40px;
             }
       
@@ -42,11 +42,14 @@ const sendVerificationEmail = async (email, token) => {
             .container {
               max-width: 600px;
               margin: 20px auto;
-              padding: 30px;
-              padding-top: 50px;
-              padding-bottom: 50px;
+              padding: 12px;
               border: 1px solid #e0e0e0;
-              border-radius: 8px;
+            }
+      
+            .content {
+              padding: 15px;
+              font-size: medium;
+              padding-top: 30px;
             }
       
             /* Button styles */
@@ -64,7 +67,30 @@ const sendVerificationEmail = async (email, token) => {
             }
       
             .text {
-              font-size: 13px;
+              font-size: medium;
+              padding-right: 30px;
+            }
+      
+            .user {
+              font-size: medium;
+              padding-right: 30px;
+              padding-bottom: 8px;
+            }
+      
+            .footer {
+              margin-top: 20px;
+              font-size: medium;
+              color: rgb(56, 55, 55);
+              padding: 30px;
+              background: #eeecec;
+            }
+            a {
+              color: rgb(56, 55, 55);
+              text-decoration: none;
+            }
+      
+            .footer-text {
+              text-align: center;
             }
       
             /* Button hover effect */
@@ -75,18 +101,28 @@ const sendVerificationEmail = async (email, token) => {
         </head>
         <body>
           <div class="container">
-            <h1>Email Verification</h1>
-            <p class="text">Dear User,</p>
-            <p class="text">
-              Thank you for signing up with <strong>Solve Litigation</strong>. Please
-              click the button below to verify your account
-            </p>
-            <a href="https://www.solvelitigation.com/verify-email/${token}"
-              ><button class="button">Verify Email</button></a
-            >
-            <p style="margin-bottom: 20px">
-              Best regards,<br /><strong>Solve Litigation</strong>
-            </p>
+            <div class="content">
+              <h1>Email Verification</h1>
+              <p class="user">Dear ${name},</p>
+              <p class="text">
+                Thank you for signing up with <strong>Solve Litigation</strong>.
+                Please click the button below to verify your account
+              </p>
+              <a href="https://www.solvelitigation.com/verify-email/${token}"
+                ><button class="button">Verify Email</button></a
+              >
+              <p style="margin-bottom: 20px">
+                Thanks,<br /><strong>Solve Litigation Team</strong>
+              </p>
+            </div>
+            <div>
+              <div class="footer">
+                <p class="footer-text">
+                  &copy; 2024
+                  <a href="https://www.solvelitigation.com/">Solve Litigation</a>
+                </p>
+              </div>
+            </div>
           </div>
         </body>
       </html>
@@ -100,7 +136,7 @@ const sendVerificationEmail = async (email, token) => {
   }
 }
 
-const sendResetPasswordEmail = async (email, token) => {
+const sendResetPasswordEmail = async (email, token, name) => {
   try {
     const transporter = nodemailer.createTransport({
       host: 'smtp.hostinger.com',
@@ -134,7 +170,7 @@ const sendResetPasswordEmail = async (email, token) => {
             }
       
             h1 {
-              padding-bottom: 20px;
+              padding-bottom: 25px;
               font-size: 40px;
             }
       
@@ -142,11 +178,14 @@ const sendResetPasswordEmail = async (email, token) => {
             .container {
               max-width: 600px;
               margin: 20px auto;
-              padding: 30px;
-              padding-top: 50px;
-              padding-bottom: 50px;
+              padding: 12px;
               border: 1px solid #e0e0e0;
-              border-radius: 8px;
+            }
+      
+            .content {
+              padding: 15px;
+              font-size: medium;
+              padding-top: 30px;
             }
       
             /* Button styles */
@@ -164,7 +203,31 @@ const sendResetPasswordEmail = async (email, token) => {
             }
       
             .text {
-              font-size: 13px;
+              font-size: medium;
+              padding-right: 30px;
+            }
+      
+            .user {
+              font-size: medium;
+              padding-right: 30px;
+              padding-bottom: 8px;
+            }
+      
+            .footer {
+              margin-top: 30px;
+              font-size: medium;
+              color: rgb(56, 55, 55);
+              padding: 30px;
+              background: #eeecec;
+            }
+      
+            .footer-text {
+              text-align: center;
+            }
+
+            a {
+              color: rgb(56, 55, 55);
+              text-decoration: none;
             }
       
             /* Button hover effect */
@@ -175,16 +238,23 @@ const sendResetPasswordEmail = async (email, token) => {
         </head>
         <body>
           <div class="container">
-            <h1>Reset Password</h1>
-            <p class="text">Dear User,</p>
-            <p class="text">
-              A password reset has been requested for your account. If this was you,
-              please use the link below to reset your password.
-            </p>
-            <a href="https://www.solvelitigation.com/reset-password/${token}"
-              ><button class="button">Reset Password</button></a
-            >
-            <p>Best regards,<br /><strong>Solve Litigation</strong></p>
+            <div class="content">
+              <h1>Reset Password</h1>
+              <p class="user">Dear ${name},</p>
+              <p class="text">
+                A password reset has been requested for your account. If this was you,
+                please use the link below to reset your password.
+              </p>
+              <a href="https://www.solvelitigation.com/reset-password/${token}"
+                ><button class="button">Reset Password</button></a
+              >
+              <p>Thanks,<br /><strong>Solve Litigation Team</strong></p>
+            </div>
+            <div>
+              <p class="footer-text">
+                &copy; 2024 <a href="https://www.solvelitigation.com/">Solve Litigation</a>
+              </p>
+            </div>
           </div>
         </body>
       </html>
