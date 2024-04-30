@@ -361,10 +361,7 @@ citationRoute.post('/get-citations-by-filter', userAuth, async (req, res) => {
         const plainTextHeadNote = citation.headNote
           .replace(/<\/?[^>]+(>|$)/g, '')
           .replace(/&nbsp;/g, ' ')
-        citation.headNote = plainTextHeadNote.substring(0, 200)
-        if (plainTextHeadNote.length > 200) {
-          citation.headNote += '...'
-        }
+        citation.headNote = plainTextHeadNote
       }
       return citation
     })
@@ -406,10 +403,7 @@ citationRoute.get('/last-10-citations', userAuth, async (req, res) => {
         const plainTextHeadNote = citation.headNote
           .replace(/<\/?[^>]+(>|$)/g, '')
           .replace(/&nbsp;/g, ' ')
-        citation.headNote = plainTextHeadNote.substring(0, 150)
-        if (plainTextHeadNote.length > 150) {
-          citation.headNote += '...'
-        }
+        citation.headNote = plainTextHeadNote
       }
       return citation
     })
