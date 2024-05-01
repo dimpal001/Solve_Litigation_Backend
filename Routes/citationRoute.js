@@ -31,15 +31,28 @@ citationRoute.post('/upload-citation', staffAuth, async (req, res) => {
       reportable,
       overRuled,
     } = req.body.citationData
-    const year = new Date(dateOfOrder).getFullYear()
-    const count = await Citation.countDocuments({
-      dateOfOrder: {
-        $gte: new Date(`${year}-01-01`),
-        $lt: new Date(`${year + 1}-01-01`),
-      },
-    })
-    const sequenceNo = String(count + 1).padStart(3, '0')
 
+    const year = new Date(dateOfOrder).getFullYear()
+
+    // Find existing citations for the same year and institution
+    const lastCitation = await Citation.findOne(
+      {
+        institutionName,
+        citationNo: { $regex: `${year}-SL-.*`, $options: 'i' }, // Filter by year and institution
+      },
+      {},
+      { sort: { citationNo: -1 } }
+    ) // Get the last citation
+
+    let sequenceNo = '001' // Default sequence number
+
+    // If there is a last citation, extract its sequence number and increment it
+    if (lastCitation) {
+      const lastSequence = parseInt(lastCitation.citationNo.split('-').pop())
+      sequenceNo = String(lastSequence + 1).padStart(3, '0')
+    }
+
+    // Generate abbreviation
     let abbreviation = ''
     if (institutionName.toLowerCase().includes('supreme court')) {
       abbreviation = 'SC'
@@ -49,8 +62,10 @@ citationRoute.post('/upload-citation', staffAuth, async (req, res) => {
       abbreviation = 'TR'
     }
 
+    // Generate citation number
     const citationNo = `${year}-SL-${abbreviation}-${sequenceNo}`
 
+    // Construct new Citation object
     const newCitation = new Citation({
       institutionName,
       index,
@@ -78,6 +93,7 @@ citationRoute.post('/upload-citation', staffAuth, async (req, res) => {
       },
     })
 
+    // Save the new citation
     const savedCitation = await newCitation.save()
 
     res.status(201).json({ message: 'Citation uploaded successfully' })
