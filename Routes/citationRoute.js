@@ -31,8 +31,6 @@ citationRoute.post('/upload-citation', staffAuth, async (req, res) => {
       reportable,
       overRuled,
     } = req.body.citationData
-
-    // Generate citation number
     const year = new Date(dateOfOrder).getFullYear()
     const count = await Citation.countDocuments({
       dateOfOrder: {
