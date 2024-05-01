@@ -173,7 +173,7 @@ citationRoute.put('/update-citation/:id', staffAuth, async (req, res) => {
   }
 })
 
-async function generateCitationNo(abbreviation) {
+const generateCitationNo = async (abbreviation) => {
   const year = new Date().getFullYear()
   const count = await Citation.countDocuments({
     dateOfOrder: {
@@ -185,7 +185,7 @@ async function generateCitationNo(abbreviation) {
   return `${year}-SL-${abbreviation}-${sequenceNo}`
 }
 
-function getAbbreviation(institutionName) {
+const getAbbreviation = (institutionName) => {
   if (institutionName.toLowerCase().includes('supreme court')) {
     return 'SC'
   } else if (institutionName.toLowerCase().includes('high court')) {
