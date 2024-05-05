@@ -7,7 +7,7 @@ const actSchema = new mongoose.Schema({
     type: String,
     default: 'act',
   },
-  judgments: String,
+  judgements: String,
   notification: String,
   title: String,
   status: {

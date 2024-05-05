@@ -7,14 +7,14 @@ const actRoute = express.Router()
 
 actRoute.post('/upload-act', adminAuth, async (req, res) => {
   try {
-    const { institutionName, index, title, judgments, notification } =
+    const { institutionName, index, title, judgements, notification } =
       req.body.actData
 
     const newAct = new Acts({
       institutionName,
       index,
       title,
-      judgments,
+      judgements,
       notification,
       uploadedBy: {
         userId: req.user._id,

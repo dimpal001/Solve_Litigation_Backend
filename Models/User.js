@@ -13,7 +13,7 @@ const userSchema = new mongoose.Schema({
   address: String,
   selectedService: {
     type: [String],
-    enum: ['judgments', 'legalAdvice', 'studyResources'],
+    enum: ['judgements', 'legalAdvice', 'studyResources'],
     default: [],
   },
   isVerified: { type: Boolean, default: false },
