@@ -19,7 +19,6 @@ const actSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
-  citationNo: String,
   uploadedBy: {
     userId: {
       type: mongoose.Schema.Types.ObjectId,

@@ -3,7 +3,7 @@ const nodemailer = require('nodemailer')
 const sendVerificationEmail = async (email, token, name) => {
   try {
     const transporter = nodemailer.createTransport({
-      host: 'smtp.hostinger.com',
+      host: 'smtpout.secureserver.net',
       port: 465,
       secure: true,
       auth: {
@@ -13,7 +13,7 @@ const sendVerificationEmail = async (email, token, name) => {
     })
 
     const mailOptions = {
-      from: process.env.EMAIL,
+      from: '"Solve Litigation" <' + process.env.EMAIL + '>',
       to: email,
       subject: 'Account Verification - Solve Litigation',
       html: `
@@ -102,14 +102,14 @@ const sendVerificationEmail = async (email, token, name) => {
         <body>
           <div class="container">
             <div class="content">
-              <h1>Email Verification</h1>
+              <h1>Account Verification</h1>
               <p class="user">Dear ${name},</p>
               <p class="text">
                 Thank you for signing up with <strong>Solve Litigation</strong>.
                 Please click the button below to verify your account
               </p>
               <a href="https://www.solvelitigation.com/verify-email/${token}"
-                ><button class="button">Verify Email</button></a
+                ><button class="button">Verify Account</button></a
               >
               <p style="margin-bottom: 20px">
                 Thanks,<br /><strong>Solve Litigation Team</strong>
@@ -139,7 +139,7 @@ const sendVerificationEmail = async (email, token, name) => {
 const sendResetPasswordEmail = async (email, token, name) => {
   try {
     const transporter = nodemailer.createTransport({
-      host: 'smtp.hostinger.com',
+      host: 'smtpout.secureserver.net',
       port: 465,
       secure: true,
       auth: {
@@ -149,7 +149,7 @@ const sendResetPasswordEmail = async (email, token, name) => {
     })
 
     const mailOptions = {
-      from: process.env.EMAIL,
+      from: '"Solve Litigation" <' + process.env.EMAIL + '>',
       to: email,
       subject: 'Reset Password - Solve Litigation',
       html: `
@@ -212,9 +212,9 @@ const sendResetPasswordEmail = async (email, token, name) => {
               padding-right: 30px;
               padding-bottom: 8px;
             }
-      
+
             .footer {
-              margin-top: 30px;
+              margin-top: 20px;
               font-size: medium;
               color: rgb(56, 55, 55);
               padding: 30px;
@@ -251,9 +251,12 @@ const sendResetPasswordEmail = async (email, token, name) => {
               <p>Thanks,<br /><strong>Solve Litigation Team</strong></p>
             </div>
             <div>
-              <p class="footer-text">
-                &copy; 2024 <a href="https://www.solvelitigation.com/">Solve Litigation</a>
-              </p>
+              <div class="footer">
+                <p class="footer-text">
+                  &copy; 2024
+                  <a href="https://www.solvelitigation.com/">Solve Litigation</a>
+                </p>
+              </div>
             </div>
           </div>
         </body>

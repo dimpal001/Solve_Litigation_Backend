@@ -118,7 +118,10 @@ citationRoute.put('/update-citation/:id', staffAuth, async (req, res) => {
         if (!abbreviation) {
           return res.status(400).json({ error: 'Invalid institutionName' })
         }
-        updatedCitationData.citationNo = await generateCitationNo(abbreviation)
+        updatedCitationData.citationNo = await generateCitationNo(
+          abbreviation,
+          citationId
+        )
       }
 
       updatedCitationData.status = 'pending'
@@ -173,16 +176,29 @@ citationRoute.put('/update-citation/:id', staffAuth, async (req, res) => {
   }
 })
 
-const generateCitationNo = async (abbreviation) => {
+const generateCitationNo = async (abbreviation, citationId) => {
   const year = new Date().getFullYear()
-  const count = await Citation.countDocuments({
-    dateOfOrder: {
-      $gte: new Date(`${year}-01-01`),
-      $lt: new Date(`${year + 1}-01-01`),
-    },
-  })
-  const sequenceNo = String(count + 1).padStart(3, '0')
-  return `${year}-SL-${abbreviation}-${sequenceNo}`
+
+  let sequenceNo = '001'
+  let citationNo
+
+  do {
+    citationNo = `${year}-SL-${abbreviation}-${sequenceNo}`
+
+    // Check if the generated citation number already exists in the database
+    const existingCitation = await Citation.findOne({ citationNo })
+
+    // If the citation number exists and it's not the citation being updated, increment the sequence number
+    if (existingCitation && existingCitation._id.toString() !== citationId) {
+      const lastSequence = parseInt(sequenceNo)
+      sequenceNo = String(lastSequence + 1).padStart(3, '0')
+    } else {
+      // If the citation number is unique or it's the citation being updated, break the loop
+      break
+    }
+  } while (true)
+
+  return citationNo
 }
 
 const getAbbreviation = (institutionName) => {
@@ -228,21 +244,7 @@ citationRoute.get('/pending-citations', staffAuth, async (req, res) => {
       '_id status type citationNo title dateOfOrder institutionName lastModifiedDate'
     )
 
-    const pendingActs = await Act.find(
-      { status: 'pending' },
-      '_id status institutionName type title citationNo'
-    )
-
-    const allPendingCitations = [...pendingCitations, ...pendingActs]
-
-    const truncatedCitations = allPendingCitations.map((citation) => {
-      if (citation.judgments && citation.judgments.length > 150) {
-        citation.judgments = citation.judgments.substring(0, 150)
-      }
-      return citation
-    })
-
-    res.status(200).json({ pendingCitations: truncatedCitations })
+    res.status(200).json({ pendingCitations: pendingCitations })
   } catch (error) {
     console.error(error)
     res.status(500).json({ error: 'Internal server error' })
@@ -256,21 +258,7 @@ citationRoute.get('/approved-citations', staffAuth, async (req, res) => {
       '_id status type citationNo title dateOfOrder institutionName lastModifiedDate'
     )
 
-    const acts = await Act.find(
-      { status: 'approved' },
-      '_id status type title citationNo'
-    )
-
-    const approvedCitations = [...citations, ...acts]
-
-    const truncatedCitations = approvedCitations.map((citation) => {
-      if (citation.judgments && citation.judgments.length > 150) {
-        citation.judgments = citation.judgments.substring(0, 150)
-      }
-      return citation
-    })
-
-    res.status(200).json({ approvedCitations: truncatedCitations })
+    res.status(200).json({ approvedCitations: citations })
   } catch (error) {
     console.error(error)
     res.status(500).json({ error: 'Internal server error' })

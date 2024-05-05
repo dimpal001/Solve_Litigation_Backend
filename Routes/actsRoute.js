@@ -1,6 +1,7 @@
 const express = require('express')
 const Acts = require('../Models/Acts')
 const adminAuth = require('../Middleware/adminAuth')
+const staffAuth = require('../Middleware/staffAuth')
 
 const actRoute = express.Router()
 
@@ -9,30 +10,11 @@ actRoute.post('/upload-act', adminAuth, async (req, res) => {
     const { institutionName, index, title, judgments, notification } =
       req.body.actData
 
-    const currentYear = new Date().getFullYear()
-
-    const abbreviation = getAbbreviation(institutionName)
-    if (!abbreviation) {
-      return res.status(400).json({ error: 'Invalid institutionName' })
-    }
-
-    const count = await Acts.countDocuments({
-      createdAt: {
-        $gte: new Date(`${currentYear}-01-01`),
-        $lt: new Date(`${currentYear + 1}-01-01`),
-      },
-    })
-
-    const serialNumber = String(count + 1).padStart(3, '0')
-
-    const citationNo = `${currentYear}-SL-${abbreviation}-${serialNumber}`
-
     const newAct = new Acts({
       institutionName,
       index,
       title,
       judgments,
-      citationNo,
       notification,
       uploadedBy: {
         userId: req.user._id,
@@ -40,7 +22,7 @@ actRoute.post('/upload-act', adminAuth, async (req, res) => {
       },
     })
 
-    const savedAct = await newAct.save()
+    await newAct.save()
 
     res.status(201).json({ message: 'Act uploaded successfully' })
   } catch (error) {
@@ -49,15 +31,32 @@ actRoute.post('/upload-act', adminAuth, async (req, res) => {
   }
 })
 
-function getAbbreviation(institutionName) {
-  if (institutionName.toLowerCase().includes('supreme court')) {
-    return 'SC'
-  } else if (institutionName.toLowerCase().includes('high court')) {
-    return 'HC'
-  } else if (institutionName.toLowerCase().includes('tribunal')) {
-    return 'TR'
+actRoute.get('/pending-acts', staffAuth, async (req, res) => {
+  try {
+    const pendingActs = await Acts.find(
+      { status: 'pending' },
+      '_id status type title institutionName lastModifiedDate'
+    )
+
+    res.status(200).json({ pendingActs: pendingActs })
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ error: 'Internal server error' })
   }
-  return null
-}
+})
+
+actRoute.get('/approved-acts', staffAuth, async (req, res) => {
+  try {
+    const approvedActs = await Acts.find(
+      { status: 'approved' },
+      '_id status type title institutionName lastModifiedDate'
+    )
+
+    res.status(200).json({ approvedActs: approvedActs })
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ error: 'Internal server error' })
+  }
+})
 
 module.exports = actRoute
