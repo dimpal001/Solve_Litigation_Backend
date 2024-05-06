@@ -2,6 +2,7 @@ const express = require('express')
 const Acts = require('../Models/Acts')
 const adminAuth = require('../Middleware/adminAuth')
 const staffAuth = require('../Middleware/staffAuth')
+const userAuth = require('../Middleware/userAuth')
 
 const actRoute = express.Router()
 
@@ -53,6 +54,20 @@ actRoute.get('/approved-acts', staffAuth, async (req, res) => {
     )
 
     res.status(200).json({ approvedActs: approvedActs })
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ error: 'Internal server error' })
+  }
+})
+
+actRoute.get('/get-all-acts', userAuth, async (req, res) => {
+  try {
+    const acts = await Acts.find(
+      { status: 'approved' },
+      '_id title institutionName'
+    )
+
+    res.status(200).json({ acts: acts })
   } catch (error) {
     console.error(error)
     res.status(500).json({ error: 'Internal server error' })
