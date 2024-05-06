@@ -33,4 +33,14 @@ contactFormRoute.get('/all-forms', adminAuth, async (req, res) => {
   }
 })
 
+contactFormRoute.delete('/:formId', adminAuth, async (req, res) => {
+  try {
+    const formId = await ContactUs.findByIdAndDelete(req.params.formId)
+    res.status(200).json({ message: 'Form deleted successfully.' })
+  } catch (error) {
+    console.log(error)
+    res.status(500).json({ error: 'Internal server error' })
+  }
+})
+
 module.exports = contactFormRoute
