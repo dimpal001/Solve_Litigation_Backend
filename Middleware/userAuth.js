@@ -16,6 +16,7 @@ const userAuth = async (req, res, next) => {
     const decodedToken = jwt.verify(req.token, config.SECRET_KEY)
     const userId = decodedToken.userId
     const user = await User.findById(userId)
+    console.log(userId, user)
 
     if (!user) {
       return res.status(401).json({ error: 'Unauthorized' })

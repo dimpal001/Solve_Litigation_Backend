@@ -11,11 +11,12 @@ const actsRoute = require('./Routes/actsRoute')
 const filterRoute = require('./Routes/filterRoute')
 const verificationRouter = require('./Routes/verificationRoute')
 const contactRouter = require('./Routes/contactFormRoute')
+const legalAdviceRequestRouter = require('./Routes/legalAdviceRequests')
 
 const app = express()
 
-app.use(bodyParser.json({ limit: '10mb' }))
-app.use(bodyParser.urlencoded({ extended: true, limit: '10mb' }))
+app.use(bodyParser.json({ limit: '15mb' }))
+app.use(bodyParser.urlencoded({ extended: true, limit: '15mb' }))
 
 app.use(bodyParser.json())
 app.use(morgan('dev'))
@@ -40,6 +41,7 @@ app.use('/api/solve_litigation/act/', actsRoute)
 app.use('/api/solve_litigation/filter/', filterRoute)
 app.use('/api/solve_litigation/verification/', verificationRouter)
 app.use('/api/solve_litigation/contact/', contactRouter)
+app.use('/api/solve_litigation/legal-advice/', legalAdviceRequestRouter)
 
 const PORT = process.env.PORT || 3000
 app.listen(PORT, () => {
