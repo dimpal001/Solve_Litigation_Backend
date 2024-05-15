@@ -16,6 +16,13 @@ const legalAdviceRequestSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    feedback: {
+      type: String,
+    },
+    isFeedback: {
+      type: Boolean,
+      default: false,
+    },
     user: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
