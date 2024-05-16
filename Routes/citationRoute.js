@@ -5,6 +5,7 @@ const adminAuth = require('../Middleware/adminAuth')
 const staffAuth = require('../Middleware/staffAuth')
 const userAuth = require('../Middleware/userAuth')
 const { default: puppeteer } = require('puppeteer')
+const { shareCitationLink } = require('../utils/registrationVerificationMail')
 
 const citationRoute = express.Router()
 
@@ -265,7 +266,7 @@ citationRoute.get('/approved-citations', staffAuth, async (req, res) => {
   }
 })
 
-citationRoute.get('/citation/:id', userAuth, async (req, res) => {
+citationRoute.get('/citation/:id', async (req, res) => {
   try {
     let citation = await Citation.findById(req.params.id)
 
@@ -411,6 +412,21 @@ citationRoute.get('/last-10-citations', userAuth, async (req, res) => {
     })
 
     res.status(200).json({ last10Citations: truncatedCitations })
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ error: 'Internal server error' })
+  }
+})
+
+citationRoute.post('/share', userAuth, async (req, res) => {
+  try {
+    const link = req.body.link
+    const email = req.body.email
+    const name = req.user.fullName
+
+    await shareCitationLink(email, link, name)
+
+    res.status(200).json({ message: 'Judgement has been shared' })
   } catch (error) {
     console.error(error)
     res.status(500).json({ error: 'Internal server error' })
