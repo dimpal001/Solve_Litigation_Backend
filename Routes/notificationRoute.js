@@ -43,4 +43,21 @@ notificationRoute.get('/', async (req, res) => {
   }
 })
 
+notificationRoute.delete('/:id', async (req, res) => {
+  try {
+    const isDeleted = await Notification.findByIdAndDelete(req.params.id)
+
+    if (!isDeleted) {
+      res.status(201).json({ error: 'The notification is not found' })
+    }
+
+    if (isDeleted) {
+      res.status(201).json({ message: 'The notification has been deleted' })
+    }
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ error: 'Internal server error' })
+  }
+})
+
 module.exports = notificationRoute
