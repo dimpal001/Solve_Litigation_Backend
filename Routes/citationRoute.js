@@ -382,7 +382,16 @@ citationRoute.post('/citation-pdf', async (req, res) => {
     const browser = await puppeteer.launch()
     const page = await browser.newPage()
     await page.setContent(htmlContent)
-    const pdfBuffer = await page.pdf({ format: 'A4' })
+    const pdfBuffer = await page.pdf({
+      format: 'A4',
+      margin: {
+        top: '20mm',
+        bottom: '20mm',
+        left: '20mm',
+        right: '20mm',
+      },
+      printBackground: true,
+    })
     await browser.close()
 
     res.setHeader('Content-Type', 'application/pdf')
