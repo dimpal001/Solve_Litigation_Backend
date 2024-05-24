@@ -4,6 +4,7 @@ const Act = require('../Models/Acts')
 const adminAuth = require('../Middleware/adminAuth')
 const staffAuth = require('../Middleware/staffAuth')
 const userAuth = require('../Middleware/userAuth')
+const browser = await puppeteer.launch({ args: ['--no-sandbox'] })
 const { default: puppeteer } = require('puppeteer')
 const { shareCitationLink } = require('../utils/registrationVerificationMail')
 
