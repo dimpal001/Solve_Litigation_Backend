@@ -4,7 +4,6 @@ const Act = require('../Models/Acts')
 const adminAuth = require('../Middleware/adminAuth')
 const staffAuth = require('../Middleware/staffAuth')
 const userAuth = require('../Middleware/userAuth')
-const browser = await puppeteer.launch({ args: ['--no-sandbox'] })
 const { default: puppeteer } = require('puppeteer')
 const { shareCitationLink } = require('../utils/registrationVerificationMail')
 
@@ -380,7 +379,7 @@ citationRoute.post('/get-citations-by-filter', userAuth, async (req, res) => {
 citationRoute.post('/citation-pdf', async (req, res) => {
   const { htmlContent } = req.body
   try {
-    const browser = await puppeteer.launch()
+    const browser = await puppeteer.launch({ args: ['--no-sandbox'] })
     const page = await browser.newPage()
     await page.setContent(htmlContent)
     const pdfBuffer = await page.pdf({
