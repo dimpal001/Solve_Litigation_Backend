@@ -11,8 +11,9 @@ const actsRoute = require('./Routes/actsRoute')
 const filterRoute = require('./Routes/filterRoute')
 const verificationRouter = require('./Routes/verificationRoute')
 const contactRouter = require('./Routes/contactFormRoute')
-const legalAdviceRequestRouter = require('./Routes/legalAdviceRequests')
+const legalAdviceRoute = require('./Routes/legalAdvice')
 const notificationRoute = require('./Routes/notificationRoute')
+const studyMaterial = require('./Routes/studyMaterialRoute')
 
 const app = express()
 
@@ -42,8 +43,9 @@ app.use('/api/solve_litigation/act/', actsRoute)
 app.use('/api/solve_litigation/filter/', filterRoute)
 app.use('/api/solve_litigation/verification/', verificationRouter)
 app.use('/api/solve_litigation/contact/', contactRouter)
-app.use('/api/solve_litigation/legal-advice/', legalAdviceRequestRouter)
+app.use('/api/solve_litigation/legal-advice/', legalAdviceRoute)
 app.use('/api/solve_litigation/notification/', notificationRoute)
+app.use('/api/solve_litigation/study-material/', studyMaterial)
 
 const PORT = process.env.PORT || 3000
 app.listen(PORT, () => {

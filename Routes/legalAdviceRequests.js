@@ -1,5 +1,3 @@
-// route to handle all legal advice requests
-
 const express = require('express')
 const legalAdviceRequestRouter = express.Router()
 const LegalAdviceRequest = require('../Models/LegalAdviceRequest')
@@ -9,11 +7,14 @@ const adminAuthMiddleware = require('../Middleware/adminAuth')
 
 const storage = multer.memoryStorage()
 const fileFilter = (req, file, cb) => {
-  if (file.mimetype === 'application/pdf') {
-    cb(null, true)
-  } else {
-    cb(new Error('Only PDF files are allowed'), false)
-  }
+  cb(null, true)
+  // if (
+  //   file.mimetype === 'application/pdf' ||
+  //   file.mimetype === 'application/doc'
+  // ) {
+  // } else {
+  //   cb(new Error('Only PDF files are allowed'), false)
+  // }
 }
 
 const upload = multer({
