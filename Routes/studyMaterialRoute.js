@@ -3,6 +3,7 @@ const Topic = require('../Models/StudyMaterial')
 const adminAuth = require('../Middleware/adminAuth')
 const staffAuth = require('../Middleware/staffAuth')
 const userAuth = require('../Middleware/userAuth')
+const mongoose = require('mongoose')
 
 const studyMaterialRoute = express.Router()
 
@@ -59,12 +60,16 @@ studyMaterialRoute.post(
         return res.status(404).json({ error: 'Topic not found' })
       }
 
-      topic.questions.push({ question, answer })
+      const newQuestion = {
+        question,
+        answer,
+        topicId,
+      }
+
+      topic.questions.push(newQuestion)
       await topic.save()
 
-      res
-        .status(201)
-        .json({ topic, message: 'The question-answer has been uploaded!' })
+      res.status(201).json(topic)
     } catch (error) {
       console.error(error)
       res.status(500).json({ error: 'Internal server error' })
@@ -211,9 +216,10 @@ studyMaterialRoute.get('/questions', userAuth, async (req, res) => {
       { $unwind: '$questions' },
       {
         $project: {
+          _id: '$questions._id',
           question: '$questions.question',
           answer: '$questions.answer',
-          topic: '$topic',
+          topicId: '$questions.topicId',
         },
       },
       { $skip: (page - 1) * limit },
@@ -245,6 +251,38 @@ studyMaterialRoute.get(
       const questions = topic.questions.slice((page - 1) * limit, page * limit)
 
       res.status(200).json(questions)
+    } catch (error) {
+      console.error(error)
+      res.status(500).json({ error: 'Internal server error' })
+    }
+  }
+)
+
+// Route to get a specific question-answer for a topic
+studyMaterialRoute.get(
+  '/topics/:topicId/questions/:questionId',
+  userAuth,
+  async (req, res) => {
+    const { topicId, questionId } = req.params
+
+    try {
+      // Find the topic containing the question
+      const topic = await Topic.findById(topicId)
+      console.log(topic)
+
+      if (!topic) {
+        return res.status(404).json({ error: 'Topic not found' })
+      }
+
+      console.log(questionId)
+      const question = topic.questions.id(questionId)
+      console.log(question)
+
+      if (!question) {
+        return res.status(404).json({ error: 'Question not found' })
+      }
+
+      res.status(200).json(question)
     } catch (error) {
       console.error(error)
       res.status(500).json({ error: 'Internal server error' })
