@@ -1,4 +1,4 @@
-import mongoose from 'mongoose'
+const mongoose = require('mongoose')
 
 const messageSchema = new mongoose.Schema(
   {
@@ -15,6 +15,9 @@ const messageSchema = new mongoose.Schema(
     message: {
       type: String,
       required: true,
+    },
+    attachment: {
+      type: String,
     },
   },
   { timestamps: true }

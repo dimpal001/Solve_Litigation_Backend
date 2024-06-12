@@ -266,23 +266,43 @@ studyMaterialRoute.get(
     const { topicId, questionId } = req.params
 
     try {
-      // Find the topic containing the question
+      // Find the topic containing the asking question
       const topic = await Topic.findById(topicId)
-      console.log(topic)
-
       if (!topic) {
         return res.status(404).json({ error: 'Topic not found' })
       }
 
-      console.log(questionId)
+      // Find the asking question
       const question = topic.questions.id(questionId)
-      console.log(question)
-
       if (!question) {
         return res.status(404).json({ error: 'Question not found' })
       }
 
-      res.status(200).json(question)
+      // Get the IDs of all questions in the topic
+      const questionIds = topic.questions.map((question) =>
+        question._id.toString()
+      )
+
+      // Remove the ID of the asking question from the list
+      const filteredQuestionIds = questionIds.filter((id) => id !== questionId)
+
+      // Select a random sample of 5 question IDs from the filtered list
+      const randomQuestionIds = filteredQuestionIds
+        .sort(() => 0.5 - Math.random())
+        .slice(0, 5)
+
+      // Find the 5 related questions
+      const relatedQuestions = topic.questions
+        .filter((question) =>
+          randomQuestionIds.includes(question._id.toString())
+        )
+        .map(({ _id, question }) => ({ _id, question, topicId }))
+
+      // Return the asking question and the related questions
+      res.status(200).json({
+        question,
+        relatedQuestions,
+      })
     } catch (error) {
       console.error(error)
       res.status(500).json({ error: 'Internal server error' })
