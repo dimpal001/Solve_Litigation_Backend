@@ -22,6 +22,7 @@ userRoute.post('/register', async (req, res) => {
       registrationType,
       state,
       district,
+      userType,
     } = req.body
 
     const isEmailExist = await User.findOne({ email })
@@ -58,7 +59,7 @@ userRoute.post('/register', async (req, res) => {
       registrationType,
       state,
       district,
-      userType: 'guest',
+      userType,
       selectedService: [],
       verificationToken: token,
     })
