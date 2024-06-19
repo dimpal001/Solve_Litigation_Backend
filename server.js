@@ -4,8 +4,6 @@ const bodyParser = require('body-parser')
 const cors = require('cors')
 const config = require('./Middleware/config')
 const morgan = require('morgan')
-
-// Message
 const http = require('http')
 const socketIo = require('socket.io')
 
@@ -20,13 +18,13 @@ const legalAdviceRoute = require('./Routes/legalAdvice')
 const notificationRoute = require('./Routes/notificationRoute')
 const studyMaterial = require('./Routes/studyMaterialRoute')
 const message = require('./Routes/messageRoute')
+const Message = require('./Models/Message')
 
 const app = express()
-
-// Message
 const server = http.createServer(app)
 const io = socketIo(server, {
   cors: {
+    // origin: 'http://localhost:5174',
     origin: 'https://chat.solvelitigation.com',
     methods: ['GET', 'POST'],
   },
@@ -34,8 +32,6 @@ const io = socketIo(server, {
 
 app.use(bodyParser.json({ limit: '15mb' }))
 app.use(bodyParser.urlencoded({ extended: true, limit: '15mb' }))
-
-app.use(bodyParser.json())
 app.use(morgan('dev'))
 app.use(cors())
 
@@ -63,17 +59,46 @@ app.use('/api/solve_litigation/notification/', notificationRoute)
 app.use('/api/solve_litigation/study-material/', studyMaterial)
 app.use('/api/solve_litigation/message/', message)
 
-// Message
+// Keep track of users and their sockets
+const users = {}
+
 io.on('connection', (socket) => {
   console.log('New client connected')
 
-  socket.on('sendMessage', ({ to, text }) => {
-    // You might want to save the message to the database here
-    io.to(to).emit('receiveMessage', { text, from: socket.id })
+  // Store the connected user's socket ID
+  socket.on('register', (userId) => {
+    users[userId] = socket.id
+  })
+
+  socket.on('sendMessage', async ({ from, to, text, attachment }) => {
+    const newMessage = new Message({
+      from,
+      to,
+      text,
+      attachment,
+      createdAt: new Date(),
+    })
+    await newMessage.save()
+
+    const recipientSocket = users[to]
+    if (recipientSocket) {
+      io.to(recipientSocket).emit('receiveMessage', {
+        from,
+        text,
+        attachment,
+        createdAt: newMessage.createdAt,
+      })
+    }
   })
 
   socket.on('disconnect', () => {
     console.log('Client disconnected')
+    for (const userId in users) {
+      if (users[userId] === socket.id) {
+        delete users[userId]
+        break
+      }
+    }
   })
 })
 

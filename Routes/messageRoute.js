@@ -3,6 +3,7 @@ const messageRouter = express.Router()
 const User = require('../Models/User')
 const Message = require('../Models/Message')
 const mongoose = require('mongoose')
+const fs = require('fs')
 
 const app = express()
 const http = require('http')
@@ -11,8 +12,97 @@ const server = http.createServer(app)
 const io = socketIo(server, {
   cors: {
     origin: 'https://chat.solvelitigation.com',
+    // origin: 'http://localhost:5174',
     methods: ['GET', 'POST'],
   },
+})
+
+const multer = require('multer')
+const path = require('path')
+
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, 'uploads/') // Folder where attachments will be stored
+  },
+  filename: function (req, file, cb) {
+    cb(null, Date.now() + '-' + file.originalname)
+  },
+})
+
+const upload = multer({ storage })
+
+// Send message route
+messageRouter.post(
+  '/send-message',
+  upload.single('attachment'),
+  async (req, res) => {
+    const { from, to, text } = req.body
+    let attachment = ''
+
+    if (req.file) {
+      attachment = req.file.filename
+    }
+
+    try {
+      const newMessage = new Message({
+        from,
+        to,
+        text,
+        attachment,
+        createdAt: new Date(),
+      })
+      await newMessage.save()
+
+      res.status(200).json({ message: 'Message sent successfully', newMessage })
+    } catch (error) {
+      console.error('Error sending message:', error)
+      res.status(500).json({ error: 'Internal server error' })
+    }
+  }
+)
+// Download Attachment route
+messageRouter.get('/download/:filename', (req, res) => {
+  const filename = req.params.filename
+  const filePath = path.join(__dirname, '../uploads', filename)
+
+  // Check if the file exists
+  if (fs.existsSync(filePath)) {
+    // Provide the file for download
+    res.sendFile(filePath)
+  } else {
+    // File not found
+    res.status(404).json({ error: 'File not found' })
+  }
+})
+
+// DELETE route to delete a message and its attachment (if any)
+messageRouter.delete('/delete-message/:messageId', async (req, res) => {
+  const messageId = req.params.messageId
+
+  try {
+    // Find the message by ID
+    const message = await Message.findById(messageId)
+
+    if (!message) {
+      return res.status(404).json({ error: 'Message not found' })
+    }
+
+    // Delete the attachment file if it exists
+    if (message.attachment) {
+      const filePath = path.join(__dirname, '../uploads', message.attachment)
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath)
+      }
+    }
+
+    // Delete the message from the database
+    await Message.findByIdAndDelete(messageId)
+
+    res.status(200).json({ message: 'Message deleted successfully' })
+  } catch (error) {
+    console.error('Error deleting message:', error)
+    res.status(500).json({ error: 'Internal server error' })
+  }
 })
 
 messageRouter.get('/lawyer-list', async (req, res) => {
@@ -46,19 +136,19 @@ messageRouter.get('/:fromUser/:toUser', async (req, res) => {
 })
 
 // Send a new message
-messageRouter.post('/send-message', async (req, res) => {
-  const { from, to, text } = req.body
+// messageRouter.post('/send-message', async (req, res) => {
+//   const { from, to, text } = req.body
 
-  try {
-    const newMessage = new Message({ from, to, text, createdAt: new Date() })
-    await newMessage.save()
+//   try {
+//     const newMessage = new Message({ from, to, text, createdAt: new Date() })
+//     await newMessage.save()
 
-    res.status(200).json({ message: 'Message sent successfully', newMessage })
-  } catch (error) {
-    console.error('Error sending message:', error)
-    res.status(500).json({ error: 'Internal server error' })
-  }
-})
+//     res.status(200).json({ message: 'Message sent successfully', newMessage })
+//   } catch (error) {
+//     console.error('Error sending message:', error)
+//     res.status(500).json({ error: 'Internal server error' })
+//   }
+// })
 
 // GET list of users with whom the current user has chatted
 messageRouter.get('/chatted-users', async (req, res) => {

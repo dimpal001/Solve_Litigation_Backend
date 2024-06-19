@@ -237,8 +237,9 @@ userRoute.get('/user-details/:userId', async (req, res) => {
       fullName: user.fullName,
       email: user.email,
       phoneNumber: user.phoneNumber,
-      registrationType: user.registrationType,
+      specialist: user.specialist,
       state: user.state,
+      address: user.address,
       district: user.district,
       userType: user.userType,
     }
@@ -327,6 +328,7 @@ userRoute.get('/user-list', adminAuth, async (req, res) => {
         { userType: 'staff' },
         { userType: 'admin' },
         { userType: 'guest' },
+        { userType: 'lawyer' },
       ],
     }).select('_id fullName email phoneNumber userType')
 
