@@ -6,8 +6,6 @@ const config = require('./Middleware/config')
 const morgan = require('morgan')
 const http = require('http')
 const socketIo = require('socket.io')
-const multer = require('multer')
-const path = require('path')
 
 const userRoute = require('./Routes/userRoute')
 const contentsRoute = require('./Routes/contentsRoute')
@@ -26,24 +24,12 @@ const app = express()
 const server = http.createServer(app)
 const io = socketIo(server, {
   cors: {
-    origin: 'https://chat.solvelitigation.com',
+    origin: 'http://localhost:5174',
+    // origin: 'https://chat.solvelitigation.com',
     methods: ['GET', 'POST'],
   },
 })
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, 'uploads/')
-  },
-  filename: (req, file, cb) => {
-    const uniqueName = `${uuidv4()}-${file.originalname}`
-    cb(null, uniqueName)
-  },
-})
-
-const upload = multer({ storage: storage })
-
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')))
 app.use(bodyParser.json({ limit: '15mb' }))
 app.use(bodyParser.urlencoded({ extended: true, limit: '15mb' }))
 app.use(morgan('dev'))
@@ -84,36 +70,12 @@ io.on('connection', (socket) => {
     users[userId] = socket.id
   })
 
-  socket.on('sendMessage', async ({ from, to, text }) => {
+  socket.on('sendMessage', async ({ from, to, text, attachment }) => {
     const newMessage = new Message({
       from,
       to,
       text,
-      createdAt: new Date(),
-    })
-
-    // Save the message without the attachment first
-    await newMessage.save()
-
-    const recipientSocket = users[to]
-    if (recipientSocket) {
-      io.to(recipientSocket).emit('receiveMessage', {
-        from,
-        text,
-        createdAt: newMessage.createdAt,
-      })
-    }
-  })
-
-  socket.on('sendAttachment', upload.single('attachment'), async (req, res) => {
-    const { from, to, text } = req.body
-    const attachmentFilename = req.file ? req.file.filename : null
-
-    const newMessage = new Message({
-      from,
-      to,
-      text,
-      attachment: attachmentFilename,
+      attachment,
       createdAt: new Date(),
     })
     await newMessage.save()
@@ -123,11 +85,10 @@ io.on('connection', (socket) => {
       io.to(recipientSocket).emit('receiveMessage', {
         from,
         text,
-        attachment: attachmentFilename,
+        attachment,
         createdAt: newMessage.createdAt,
       })
     }
-    res.status(200).send('Attachment sent and message saved.')
   })
 
   socket.on('disconnect', () => {
