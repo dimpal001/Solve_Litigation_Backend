@@ -17,15 +17,16 @@ const contactRouter = require('./Routes/contactFormRoute')
 const legalAdviceRoute = require('./Routes/legalAdvice')
 const notificationRoute = require('./Routes/notificationRoute')
 const studyMaterial = require('./Routes/studyMaterialRoute')
-const message = require('./Routes/messageRoute')
+const messageRoute = require('./Routes/messageRoute')
 const Message = require('./Models/Message')
 
 const app = express()
 const server = http.createServer(app)
 const io = socketIo(server, {
   cors: {
-    origin: 'http://localhost:5174',
-    // origin: 'https://chat.solvelitigation.com',
+    // origin: 'http://192.168.1.24:5174',
+    // origin: 'http://localhost:5174',
+    origin: 'https://chat.solvelitigation.com',
     methods: ['GET', 'POST'],
   },
 })
@@ -57,7 +58,14 @@ app.use('/api/solve_litigation/contact/', contactRouter)
 app.use('/api/solve_litigation/legal-advice/', legalAdviceRoute)
 app.use('/api/solve_litigation/notification/', notificationRoute)
 app.use('/api/solve_litigation/study-material/', studyMaterial)
-app.use('/api/solve_litigation/message/', message)
+app.use(
+  '/api/solve_litigation/message/',
+  (req, res, next) => {
+    req.io = io
+    next()
+  },
+  messageRoute
+)
 
 // Keep track of users and their sockets
 const users = {}

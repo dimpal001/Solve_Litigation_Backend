@@ -442,4 +442,38 @@ citationRoute.post('/share', userAuth, async (req, res) => {
   }
 })
 
+citationRoute.get('/search-citations', async (req, res) => {
+  try {
+    const query = req.query.query // Assuming the query parameter is named 'query'
+
+    // Perform a case-insensitive search across multiple fields using $or and $regex operators
+    const citations = await Citation.find({
+      $or: [
+        { judgements: { $regex: query, $options: 'i' } },
+        { laws: { $regex: query, $options: 'i' } },
+        { pointOfLaw: { $regex: query, $options: 'i' } },
+        { headNote: { $regex: query, $options: 'i' } },
+      ],
+    })
+      .select('_id title dateOfOrder laws institutionName headNote createdAt') // Select desired fields
+      .limit(10) // Limit the number of results to 10
+
+    // Transform each citation to format the headNote as plain text
+    const transformedCitations = citations.map((citation) => {
+      if (citation.headNote) {
+        const plainTextHeadNote = citation.headNote
+          .replace(/<\/?[^>]+(>|$)/g, '')
+          .replace(/&nbsp;/g, ' ')
+        citation.headNote = plainTextHeadNote
+      }
+      return citation
+    })
+
+    res.status(200).json({ matchedCitations: transformedCitations })
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ error: 'Internal server error' })
+  }
+})
+
 module.exports = citationRoute

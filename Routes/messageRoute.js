@@ -2,27 +2,17 @@ const express = require('express')
 const messageRouter = express.Router()
 const User = require('../Models/User')
 const Message = require('../Models/Message')
-const mongoose = require('mongoose')
 const fs = require('fs')
 
 const app = express()
 const http = require('http')
-const socketIo = require('socket.io')
-const server = http.createServer(app)
-const io = socketIo(server, {
-  cors: {
-    origin: 'https://chat.solvelitigation.com',
-    // origin: 'http://localhost:5174',
-    methods: ['GET', 'POST'],
-  },
-})
 
 const multer = require('multer')
 const path = require('path')
 
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, 'uploads/') // Folder where attachments will be stored
+    cb(null, 'uploads/')
   },
   filename: function (req, file, cb) {
     cb(null, Date.now() + '-' + file.originalname)
@@ -33,10 +23,10 @@ const upload = multer({ storage })
 
 // Send message route
 messageRouter.post(
-  '/send-message',
+  '/send-attachment',
   upload.single('attachment'),
   async (req, res) => {
-    const { from, to, text } = req.body
+    const { from, to } = req.body
     let attachment = ''
 
     if (req.file) {
@@ -47,13 +37,19 @@ messageRouter.post(
       const newMessage = new Message({
         from,
         to,
-        text,
+        text: '',
         attachment,
         createdAt: new Date(),
       })
       await newMessage.save()
 
-      res.status(200).json({ message: 'Message sent successfully', newMessage })
+      req.io.emit('refreshMessage', {
+        message: 'Refresh called.',
+      })
+
+      res
+        .status(200)
+        .json({ message: 'Attachment sent successfully', newMessage })
     } catch (error) {
       console.error('Error sending message:', error)
       res.status(500).json({ error: 'Internal server error' })
@@ -97,6 +93,10 @@ messageRouter.delete('/delete-message/:messageId', async (req, res) => {
 
     // Delete the message from the database
     await Message.findByIdAndDelete(messageId)
+
+    req.io.emit('refreshMessage', {
+      message: 'Refresh Called.',
+    })
 
     res.status(200).json({ message: 'Message deleted successfully' })
   } catch (error) {

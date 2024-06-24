@@ -60,7 +60,10 @@ userRoute.post('/register', async (req, res) => {
       state,
       district,
       userType,
-      selectedService: [],
+      selectedService:
+        userType === 'lawyer'
+          ? ['judgements', 'legalAdvice', 'studyResources']
+          : [],
       verificationToken: token,
     })
 
