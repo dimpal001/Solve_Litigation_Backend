@@ -27,6 +27,7 @@ citationRoute.post('/upload-citation', staffAuth, async (req, res) => {
       laws,
       pointOfLaw,
       equivalentCitations,
+      whetherReported,
       advocatePetitioner,
       advocateRespondent,
       reportable,
@@ -88,6 +89,7 @@ citationRoute.post('/upload-citation', staffAuth, async (req, res) => {
       reportable,
       overRuled,
       citationNo,
+      whetherReported,
       uploadedBy: {
         userId: req.user._id,
         userName: req.user.fullName,
@@ -452,6 +454,7 @@ citationRoute.get('/search-citations', async (req, res) => {
         { judgements: { $regex: query, $options: 'i' } },
         { laws: { $regex: query, $options: 'i' } },
         { pointOfLaw: { $regex: query, $options: 'i' } },
+        { equivalentCitations: { $regex: query, $options: 'i' } },
         { headNote: { $regex: query, $options: 'i' } },
       ],
     })
@@ -470,6 +473,35 @@ citationRoute.get('/search-citations', async (req, res) => {
     })
 
     res.status(200).json({ matchedCitations: transformedCitations })
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ error: 'Internal server error' })
+  }
+})
+
+citationRoute.get('/search-by-date/:year/:month/:day', async (req, res) => {
+  try {
+    const { year, month, day } = req.params
+
+    // Create start date from year, month, and day parameters
+    const startDate = new Date(year, month - 1, day)
+    startDate.setUTCHours(0, 0, 0, 0)
+
+    // Create end date (start of the next day)
+    const endDate = new Date(startDate)
+    endDate.setUTCDate(startDate.getUTCDate() + 1)
+
+    const matchedCitations = await Citation.find(
+      {
+        dateOfOrder: {
+          $gte: startDate,
+          $lt: endDate,
+        },
+      },
+      '_id status type citationNo title dateOfOrder institutionName lastModifiedDate'
+    )
+
+    res.status(200).json(matchedCitations)
   } catch (error) {
     console.error(error)
     res.status(500).json({ error: 'Internal server error' })

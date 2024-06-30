@@ -23,6 +23,7 @@ userRoute.post('/register', async (req, res) => {
       state,
       district,
       userType,
+      specialist,
     } = req.body
 
     const isEmailExist = await User.findOne({ email })
@@ -51,6 +52,15 @@ userRoute.post('/register', async (req, res) => {
 
     const token = jwt.sign({ email }, config.SECRET_KEY, { expiresIn: '2h' })
 
+    let selectedService = []
+    if (userType === 'guest') {
+      selectedService = ['judgements']
+    } else if (userType === 'student') {
+      selectedService = ['studyResources']
+    } else if (userType === 'lawyer') {
+      selectedService = ['judgements', 'legalAdvice', 'studyResources']
+    }
+
     const user = new User({
       fullName,
       email,
@@ -60,10 +70,8 @@ userRoute.post('/register', async (req, res) => {
       state,
       district,
       userType,
-      selectedService:
-        userType === 'lawyer'
-          ? ['judgements', 'legalAdvice', 'studyResources']
-          : [],
+      specialist: userType === 'lawyer' ? specialist : undefined,
+      selectedService,
       verificationToken: token,
     })
 

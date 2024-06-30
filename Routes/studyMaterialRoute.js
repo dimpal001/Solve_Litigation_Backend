@@ -310,4 +310,52 @@ studyMaterialRoute.get(
   }
 )
 
+studyMaterialRoute.get('/search-questions', userAuth, async (req, res) => {
+  try {
+    const query = req.query.query
+
+    if (!query) {
+      return res.status(400).json({ error: 'Query parameter is required' })
+    }
+
+    const matchedQuestions = await Topic.aggregate([
+      {
+        $match: {
+          $or: [
+            { topic: { $regex: query, $options: 'i' } },
+            { 'questions.question': { $regex: query, $options: 'i' } },
+            { 'questions.answer': { $regex: query, $options: 'i' } },
+          ],
+        },
+      },
+      {
+        $unwind: '$questions',
+      },
+      {
+        $match: {
+          $or: [
+            { topic: { $regex: query, $options: 'i' } },
+            { 'questions.question': { $regex: query, $options: 'i' } },
+            { 'questions.answer': { $regex: query, $options: 'i' } },
+          ],
+        },
+      },
+      {
+        $project: {
+          _id: '$questions._id',
+          question: '$questions.question',
+          answer: '$questions.answer',
+          topicId: '$_id',
+          topic: 1,
+        },
+      },
+    ])
+
+    res.status(200).json(matchedQuestions)
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ error: 'Internal server error' })
+  }
+})
+
 module.exports = studyMaterialRoute

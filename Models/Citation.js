@@ -22,6 +22,7 @@ const citationSchema = new mongoose.Schema({
   equivalentCitations: String,
   advocatePetitioner: String,
   advocateRespondent: String,
+  whetherReported: String,
   reportable: Boolean,
   overRuled: Boolean,
   status: {
