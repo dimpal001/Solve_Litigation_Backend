@@ -38,6 +38,10 @@ const citationSchema = new mongoose.Schema({
     type: String,
     unique: true,
   },
+  createdAt: {
+    type: Date,
+    default: Date.now,
+  },
   uploadedBy: {
     userId: {
       type: mongoose.Schema.Types.ObjectId,

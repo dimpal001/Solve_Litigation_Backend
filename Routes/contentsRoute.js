@@ -87,6 +87,46 @@ contentsRoute.post('/add-law', adminAuth, async (req, res) => {
   }
 })
 
+contentsRoute.put('/update-law', adminAuth, async (req, res) => {
+  try {
+    const { _id, newName } = req.body
+
+    // Check if the _id is valid
+    if (!_id) {
+      return res.status(400).json({ message: 'Law _id is required' })
+    }
+
+    // Check if the newName is provided
+    if (!newName) {
+      return res.status(400).json({ message: 'New law name is required' })
+    }
+
+    // Check if the new name already exists in Laws collection
+    const existingLaw = await Laws.findOne({ name: newName })
+    if (existingLaw) {
+      return res
+        .status(400)
+        .json({ message: 'Law with this name already exists' })
+    }
+
+    // Find the law by _id and update its name
+    const updatedLaw = await Laws.findByIdAndUpdate(
+      _id,
+      { name: newName },
+      { new: true } // to return the updated document
+    )
+
+    if (!updatedLaw) {
+      return res.status(404).json({ message: 'Law not found' })
+    }
+
+    res.status(200).json({ message: 'Law updated successfully', updatedLaw })
+  } catch (error) {
+    console.error(error)
+    res.status(500).json({ message: 'Internal server error' })
+  }
+})
+
 contentsRoute.post('/add-courts', adminAuth, async (req, res) => {
   try {
     const { name } = req.body
