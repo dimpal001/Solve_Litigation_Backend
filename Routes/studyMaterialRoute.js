@@ -208,10 +208,26 @@ studyMaterialRoute.delete('/topics/:topicId', adminAuth, async (req, res) => {
 })
 
 // Route to get all question-answers with pagination
-studyMaterialRoute.get('/questions', userAuth, async (req, res) => {
-  const { page = 1, limit = 20 } = req.query
+studyMaterialRoute.get('/questions/:pageNumber', userAuth, async (req, res) => {
+  const { pageNumber } = req.params
+  const limit = 10
+
+  // Convert pageNumber to an integer and set a default of 0 if it's not a valid number
+  const page = parseInt(pageNumber, 10) || 0
+  const skip = page * limit
 
   try {
+    const countResult = await Topic.aggregate([
+      { $unwind: '$questions' },
+      { $count: 'total' },
+    ])
+    const totalQuestions = countResult.length > 0 ? countResult[0].total : 0
+    const totalPages = Math.ceil(totalQuestions / limit)
+
+    if (page >= totalPages) {
+      return res.status(400).json({ error: 'Page number out of range' })
+    }
+
     const questions = await Topic.aggregate([
       { $unwind: '$questions' },
       {
@@ -222,11 +238,16 @@ studyMaterialRoute.get('/questions', userAuth, async (req, res) => {
           topicId: '$questions.topicId',
         },
       },
-      { $skip: (page - 1) * limit },
-      { $limit: parseInt(limit) },
+      { $skip: skip },
+      { $limit: limit },
     ])
 
-    res.status(200).json(questions)
+    res.status(200).json({
+      questions,
+      currentPage: page,
+      totalPages,
+      totalQuestions,
+    })
   } catch (error) {
     console.error(error)
     res.status(500).json({ error: 'Internal server error' })
@@ -235,11 +256,11 @@ studyMaterialRoute.get('/questions', userAuth, async (req, res) => {
 
 // Route to filter question-answers by topic with pagination
 studyMaterialRoute.get(
-  '/topics/:topicId/questions',
+  '/topics/:topicId/questions/:pageNumber',
   userAuth,
   async (req, res) => {
-    const { topicId } = req.params
-    const { page = 1, limit = 20 } = req.query
+    const { topicId, pageNumber } = req.params
+    const limit = 10
 
     try {
       const topic = await Topic.findById(topicId)
@@ -248,9 +269,26 @@ studyMaterialRoute.get(
         return res.status(404).json({ error: 'Topic not found' })
       }
 
-      const questions = topic.questions.slice((page - 1) * limit, page * limit)
+      const totalQuestions = topic.questions.length
+      const totalPages = Math.ceil(totalQuestions / limit)
 
-      res.status(200).json(questions)
+      // Validate pageNumber to ensure it's within the valid range
+      const page = parseInt(pageNumber, 10) || 1
+      if (page < 1 || page > totalPages) {
+        return res.status(400).json({ error: 'Page number out of range' })
+      }
+
+      // Calculate the range of questions to return based on pagination
+      const start = (page - 1) * limit
+      const end = start + limit
+      const questions = topic.questions.slice(start, end)
+
+      res.status(200).json({
+        questions,
+        currentPage: page,
+        totalPages,
+        totalQuestions,
+      })
     } catch (error) {
       console.error(error)
       res.status(500).json({ error: 'Internal server error' })
