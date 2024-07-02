@@ -405,29 +405,56 @@ citationRoute.post('/citation-pdf', async (req, res) => {
   }
 })
 
-citationRoute.get('/last-10-citations', userAuth, async (req, res) => {
-  try {
-    const last10ApprovedCitations = await Citation.find({ status: 'approved' })
-      .sort({ createdAt: -1 })
-      .limit(10)
-      .select('_id title dateOfOrder laws institutionName headNote createdAt')
+citationRoute.get(
+  '/last-10-citations/:pageNumber',
+  userAuth,
+  async (req, res) => {
+    const { pageNumber } = req.params
+    const limit = 10 // Set the limit to 10 citations per page
 
-    const truncatedCitations = last10ApprovedCitations.map((citation) => {
-      if (citation.headNote) {
-        const plainTextHeadNote = citation.headNote
-          .replace(/<\/?[^>]+(>|$)/g, '')
-          .replace(/&nbsp;/g, ' ')
-        citation.headNote = plainTextHeadNote
-      }
-      return citation
-    })
+    try {
+      // Calculate skip based on page number and limit
+      const skip = pageNumber * limit
 
-    res.status(200).json({ last10Citations: truncatedCitations })
-  } catch (error) {
-    console.error(error)
-    res.status(500).json({ error: 'Internal server error' })
+      // Fetch total count of approved citations
+      const totalApprovedCitations = await Citation.countDocuments({
+        status: 'approved',
+      })
+
+      // Calculate total pages based on total count and limit
+      const totalPages = Math.ceil(totalApprovedCitations / limit)
+
+      const last10ApprovedCitations = await Citation.find({
+        status: 'approved',
+      })
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .select('_id title dateOfOrder laws institutionName headNote createdAt')
+
+      const truncatedCitations = last10ApprovedCitations.map((citation) => {
+        if (citation.headNote) {
+          const plainTextHeadNote = citation.headNote
+            .replace(/<\/?[^>]+(>|$)/g, '')
+            .replace(/&nbsp;/g, ' ')
+          citation.headNote = plainTextHeadNote
+        }
+        return citation
+      })
+
+      res.status(200).json({
+        last10Citations: truncatedCitations,
+        currentPage: parseInt(pageNumber, 10),
+        totalPages,
+        totalApprovedCitations,
+        limit,
+      })
+    } catch (error) {
+      console.error(error)
+      res.status(500).json({ error: 'Internal server error' })
+    }
   }
-})
+)
 
 citationRoute.post('/share', userAuth, async (req, res) => {
   try {
