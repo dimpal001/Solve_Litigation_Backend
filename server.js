@@ -19,6 +19,7 @@ const notificationRoute = require('./Routes/notificationRoute')
 const studyMaterial = require('./Routes/studyMaterialRoute')
 const messageRoute = require('./Routes/messageRoute')
 const Message = require('./Models/Message')
+const liquidTextRoute = require('./Routes/liquidTextRoute')
 
 const app = express()
 const server = http.createServer(app)
@@ -58,6 +59,7 @@ app.use('/api/solve_litigation/contact/', contactRouter)
 app.use('/api/solve_litigation/legal-advice/', legalAdviceRoute)
 app.use('/api/solve_litigation/notification/', notificationRoute)
 app.use('/api/solve_litigation/study-material/', studyMaterial)
+app.use('/api/solve_litigation/liquid-text/', liquidTextRoute)
 app.use(
   '/api/solve_litigation/message/',
   (req, res, next) => {

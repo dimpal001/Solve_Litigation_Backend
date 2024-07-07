@@ -483,6 +483,7 @@ citationRoute.get('/search-citations', async (req, res) => {
         { pointOfLaw: { $regex: query, $options: 'i' } },
         { equivalentCitations: { $regex: query, $options: 'i' } },
         { headNote: { $regex: query, $options: 'i' } },
+        { judgements: { $regex: query, $options: 'i' } },
       ],
     })
       .select('_id title dateOfOrder laws institutionName headNote createdAt') // Select desired fields

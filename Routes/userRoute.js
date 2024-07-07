@@ -75,6 +75,8 @@ userRoute.post('/register', async (req, res) => {
       verificationToken: token,
     })
 
+    console.log(user)
+
     await user.save()
 
     // Send verification email
