@@ -21,7 +21,13 @@ const userAuth = async (req, res, next) => {
     if (!user) {
       return res.status(401).json({ error: 'Unauthorized' })
     }
-    if (user.userType === 'guest' || user.userType === 'admin') {
+    if (
+      user.userType === 'guest' ||
+      user.userType === 'admin' ||
+      user.userType === 'ca' ||
+      user.userType === 'student' ||
+      user.userType === 'lawyer'
+    ) {
       req.user = user
       next()
     } else {

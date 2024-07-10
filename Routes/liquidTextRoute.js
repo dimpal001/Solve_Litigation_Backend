@@ -40,7 +40,7 @@ liquidTextRoute.post('/create-client', userAuth, async (req, res) => {
 
     // Fetch all clients after creating the new client
     const clients = await LiquidText.find(
-      {},
+      { 'createdUser.userId': userId },
       'id clientName clientAddress createdAt createdUser'
     )
 
@@ -126,58 +126,43 @@ liquidTextRoute.get(
         (arg) => arg._id.toString() === argumentId
       )
 
-      if (!argument || !argument.file || !argument.file.fileName) {
-        return res
-          .status(404)
-          .send({ error: 'File not found for the argument' })
+      if (!argument) {
+        return res.status(404).send({ error: 'Argument not found' })
       }
 
-      // Construct file path based on the saved file name for the argument
-      const filePath = path.join(
-        __dirname,
-        '../uploads',
-        argument.file.fileName
-      )
-
-      // Check if the file exists
-      if (!fs.existsSync(filePath)) {
-        return res.status(404).send({ error: 'File not found' })
-      }
-
-      // Read file content
-      const fileBuffer = fs.readFileSync(filePath)
-
-      // Set headers for file download
-      let contentType = 'application/pdf'
-      if (argument.file.contentType === 'application/msword') {
-        contentType = 'application/msword'
-      } else if (
-        argument.file.contentType ===
-        'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-      ) {
-        contentType =
-          'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-      }
-
-      res.set({
-        'Content-Type': contentType,
-        'Content-Disposition': `attachment; filename="${argument.file.originalName}"`,
-      })
-
-      // Send response with argument details and file content
+      // Send response with argument details only
       res.status(200).send({
         argumentDetails: {
           id: argument._id,
           title: argument.title,
           liquidText: argument.liquidText,
+          file: {
+            fileName: argument.file.fileName,
+            contentType: argument.file.contentType,
+            originalName: argument.file.originalName,
+          },
         },
-        file: fileBuffer,
       })
     } catch (error) {
       res.status(500).send({ error: error.message })
     }
   }
 )
+
+// Download Argument/Attachment route
+liquidTextRoute.get('/download-file/:filename', userAuth, async (req, res) => {
+  const filename = req.params.filename
+  const filePath = path.join(__dirname, '../uploads', filename)
+
+  // Check if the file exists
+  if (fs.existsSync(filePath)) {
+    // Provide the file for download
+    res.sendFile(filePath)
+  } else {
+    // File not found
+    res.status(404).json({ error: 'File not found' })
+  }
+})
 
 // Route to add liquid text to a specific argument
 liquidTextRoute.post(
@@ -234,10 +219,11 @@ liquidTextRoute.post(
 )
 
 // Route to fetch all clients with specific fields // done
-liquidTextRoute.get('/all-clients', userAuth, async (req, res) => {
+liquidTextRoute.get('/all-clients/:userId', userAuth, async (req, res) => {
+  const { userId } = req.params
   try {
     const documents = await LiquidText.find(
-      {},
+      { 'createdUser.userId': userId },
       'id clientName clientAddress createdAt createdUser.userName'
     )
 
