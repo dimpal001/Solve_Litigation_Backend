@@ -284,6 +284,14 @@ userRoute.put('/update-details/:userId', userAuth, async (req, res) => {
 
       user.email = data
     } else if (title === 'phoneNumber') {
+      const isPhoneNumberExist = await User.findOne({ phoneNumber: data })
+
+      if (isPhoneNumberExist) {
+        return res
+          .status(401)
+          .json({ message: 'Phone number is already registered' })
+      }
+
       user.phoneNumber = data
     } else {
       return res.status(400).json({ message: 'Invalid title' })

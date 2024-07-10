@@ -298,7 +298,7 @@ studyMaterialRoute.get(
 
 // Route to get a specific question-answer for a topic
 studyMaterialRoute.get(
-  '/topics/:topicId/questions/:questionId',
+  '/topics/:topicId/question/:questionId',
   userAuth,
   async (req, res) => {
     const { topicId, questionId } = req.params
