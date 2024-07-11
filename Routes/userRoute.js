@@ -306,7 +306,7 @@ userRoute.put('/update-details/:userId', userAuth, async (req, res) => {
   }
 })
 
-userRoute.post('/create-staff', async (req, res) => {
+userRoute.post('/create-staff', adminAuth, async (req, res) => {
   try {
     const { fullName, email, phoneNumber, password, address } = req.body
 
@@ -342,7 +342,7 @@ userRoute.post('/create-staff', async (req, res) => {
   }
 })
 
-userRoute.get('/user-list', adminAuth, async (req, res) => {
+userRoute.get('/user-list', userAuth, async (req, res) => {
   try {
     const UserList = await User.find({
       $or: [
@@ -351,7 +351,7 @@ userRoute.get('/user-list', adminAuth, async (req, res) => {
         { userType: 'guest' },
         { userType: 'lawyer' },
       ],
-    }).select('_id fullName email phoneNumber userType')
+    }).select('_id fullName email phoneNumber userType address')
 
     res.status(200).json(UserList)
   } catch (error) {
@@ -360,7 +360,7 @@ userRoute.get('/user-list', adminAuth, async (req, res) => {
   }
 })
 
-userRoute.delete('/delete-user/:userId', userAuth, async (req, res) => {
+userRoute.delete('/delete-user/:userId', adminAuth, async (req, res) => {
   try {
     const userId = req.params.userId
 
