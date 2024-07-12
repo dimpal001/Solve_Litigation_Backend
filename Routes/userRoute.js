@@ -267,7 +267,9 @@ userRoute.get('/user-details/:userId', async (req, res) => {
 userRoute.put('/update-details/:userId', userAuth, async (req, res) => {
   try {
     const userId = req.params.userId
-    const { title, data } = req.body
+    const data = req.body
+
+    console.log(data)
 
     const user = await User.findById(userId)
 
@@ -275,34 +277,28 @@ userRoute.put('/update-details/:userId', userAuth, async (req, res) => {
       return res.status(404).json({ message: 'User not found' })
     }
 
-    if (title === 'email') {
-      const isEmailExist = await User.findOne({ email: data })
+    const isPhoneNumberExist = await User.findOne({
+      phoneNumber: data.phoneNumber,
+    })
 
-      if (isEmailExist) {
-        return res.status(401).json({ message: 'Email is already registered' })
-      }
-
-      user.email = data
-    } else if (title === 'phoneNumber') {
-      const isPhoneNumberExist = await User.findOne({ phoneNumber: data })
-
+    if (data.phoneNumber !== user.phoneNumber) {
       if (isPhoneNumberExist) {
         return res
           .status(401)
-          .json({ message: 'Phone number is already registered' })
+          .json({ error: 'Phone number is already registered' })
       }
-
-      user.phoneNumber = data
-    } else {
-      return res.status(400).json({ message: 'Invalid title' })
     }
+
+    user.phoneNumber = data.phoneNumber ? data.phoneNumber : user.phoneNumber
+    user.address = data.address ? data.address : user.address
+    user.bio = data.bio ? data.bio : user.bio
 
     await user.save()
 
     res.status(200).json({ message: 'User details updated successfully' })
   } catch (error) {
     console.log(error)
-    res.status(500).json({ message: 'Internal server error' })
+    res.status(500).json({ error: 'Internal server error' })
   }
 })
 
