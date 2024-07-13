@@ -24,9 +24,9 @@ const userAuth = async (req, res, next) => {
     if (
       user.userType === 'guest' ||
       user.userType === 'admin' ||
+      user.userType === 'staff' ||
       user.userType === 'ca' ||
       user.userType === 'student' ||
-      user.userType === 'staff' ||
       user.userType === 'lawyer'
     ) {
       req.user = user
