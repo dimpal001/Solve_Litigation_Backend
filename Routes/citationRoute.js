@@ -215,7 +215,7 @@ const getAbbreviation = (institutionName) => {
   return null
 }
 
-citationRoute.delete('/delete-citation/:id', staffAuth, async (req, res) => {
+citationRoute.delete('/delete-citation/:id', adminAuth, async (req, res) => {
   try {
     const citationId = req.params.id
 
@@ -254,7 +254,7 @@ citationRoute.get('/pending-citations', staffAuth, async (req, res) => {
   }
 })
 
-citationRoute.get('/approved-citations', staffAuth, async (req, res) => {
+citationRoute.get('/approved-citations', adminAuth, async (req, res) => {
   try {
     const citations = await Citation.find(
       { status: 'approved' },
@@ -378,7 +378,7 @@ citationRoute.post('/get-citations-by-filter', userAuth, async (req, res) => {
   }
 })
 
-citationRoute.post('/citation-pdf', async (req, res) => {
+citationRoute.post('/citation-pdf', userAuth, async (req, res) => {
   const { htmlContent } = req.body
   try {
     const browser = await puppeteer.launch({ args: ['--no-sandbox'] })
@@ -471,11 +471,10 @@ citationRoute.post('/share', userAuth, async (req, res) => {
   }
 })
 
-citationRoute.get('/search-citations', async (req, res) => {
+citationRoute.get('/search-citations', userAuth, async (req, res) => {
   try {
-    const query = req.query.query // Assuming the query parameter is named 'query'
+    const query = req.query.query
 
-    // Perform a case-insensitive search across multiple fields using $or and $regex operators
     const citations = await Citation.find({
       $or: [
         { judgements: { $regex: query, $options: 'i' } },
@@ -507,33 +506,37 @@ citationRoute.get('/search-citations', async (req, res) => {
   }
 })
 
-citationRoute.get('/search-by-date/:year/:month/:day', async (req, res) => {
-  try {
-    const { year, month, day } = req.params
+citationRoute.get(
+  '/search-by-date/:year/:month/:day',
+  userAuth,
+  async (req, res) => {
+    try {
+      const { year, month, day } = req.params
 
-    // Create start date from year, month, and day parameters
-    const startDate = new Date(year, month - 1, day)
-    startDate.setUTCHours(0, 0, 0, 0)
+      // Create start date from year, month, and day parameters
+      const startDate = new Date(year, month - 1, day)
+      startDate.setUTCHours(0, 0, 0, 0)
 
-    // Create end date (start of the next day)
-    const endDate = new Date(startDate)
-    endDate.setUTCDate(startDate.getUTCDate() + 1)
+      // Create end date (start of the next day)
+      const endDate = new Date(startDate)
+      endDate.setUTCDate(startDate.getUTCDate() + 1)
 
-    const matchedCitations = await Citation.find(
-      {
-        dateOfOrder: {
-          $gte: startDate,
-          $lt: endDate,
+      const matchedCitations = await Citation.find(
+        {
+          dateOfOrder: {
+            $gte: startDate,
+            $lt: endDate,
+          },
         },
-      },
-      '_id status type citationNo title dateOfOrder institutionName lastModifiedDate'
-    )
+        '_id status type citationNo title dateOfOrder institutionName lastModifiedDate'
+      )
 
-    res.status(200).json(matchedCitations)
-  } catch (error) {
-    console.error(error)
-    res.status(500).json({ error: 'Internal server error' })
+      res.status(200).json(matchedCitations)
+    } catch (error) {
+      console.error(error)
+      res.status(500).json({ error: 'Internal server error' })
+    }
   }
-})
+)
 
 module.exports = citationRoute

@@ -1,14 +1,12 @@
 const express = require('express')
 const Topic = require('../Models/StudyMaterial')
-const adminAuth = require('../Middleware/adminAuth')
 const staffAuth = require('../Middleware/staffAuth')
 const userAuth = require('../Middleware/userAuth')
-const mongoose = require('mongoose')
 
 const studyMaterialRoute = express.Router()
 
 // Route to add a new topic
-studyMaterialRoute.post('/add-topic', adminAuth, async (req, res) => {
+studyMaterialRoute.post('/add-topic', staffAuth, async (req, res) => {
   const { topic } = req.body
   try {
     let existingTopic = await Topic.findOne({ topic })
@@ -100,7 +98,7 @@ studyMaterialRoute.get(
 )
 
 // Route to edit a topic
-studyMaterialRoute.put('/topics/:topicId', adminAuth, async (req, res) => {
+studyMaterialRoute.put('/topics/:topicId', staffAuth, async (req, res) => {
   const { topicId } = req.params
   const { topic } = req.body
 
@@ -190,7 +188,7 @@ studyMaterialRoute.delete(
 )
 
 // Route to delete a topic
-studyMaterialRoute.delete('/topics/:topicId', adminAuth, async (req, res) => {
+studyMaterialRoute.delete('/topics/:topicId', staffAuth, async (req, res) => {
   const { topicId } = req.params
 
   try {
