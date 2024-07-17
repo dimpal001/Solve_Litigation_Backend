@@ -119,7 +119,14 @@ userRoute.post('/reverify-email/:email', async (req, res) => {
 
 userRoute.post('/login', async (req, res) => {
   try {
-    const { emailOrPhoneNumber, password } = req.body
+    const { emailOrPhoneNumber, password, captchaInput, captchaToken } =
+      req.body
+
+    const decoded = jwt.verify(captchaToken, process.env.SECRET_KEY)
+    console.log(decoded, captchaInput)
+    if (captchaInput !== decoded.captcha) {
+      return res.status(401).json({ message: 'Invalid Captcha' })
+    }
 
     // Check if either email or phoneNumber is provided
     const user = await User.findOne({

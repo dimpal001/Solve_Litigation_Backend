@@ -1,12 +1,21 @@
 const express = require('express')
 const verificationRouter = express.Router()
 const User = require('../Models/User')
-const { verify } = require('jsonwebtoken')
+const jwt = require('jsonwebtoken')
+const svgCaptcha = require('svg-captcha')
+
+verificationRouter.get('/generate-captcha', (req, res) => {
+  const captcha = svgCaptcha.create((size = 6))
+  const token = jwt.sign({ captcha: captcha.text }, process.env.SECRET_KEY, {
+    expiresIn: '5m',
+  })
+  res.json({ captcha: captcha.data, token })
+})
 
 verificationRouter.post('/verify-email/:token', async (req, res) => {
   try {
     const { token } = req.params
-    const { email } = verify(token, process.env.SECRET_KEY)
+    const { email } = jwt.verify(token, process.env.SECRET_KEY)
     const user = await User.findOne({ email }).select(
       'isVerified verificationToken verificationTokenExpires'
     )
