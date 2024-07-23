@@ -100,7 +100,12 @@ citationRoute.post('/upload-citation', staffAuth, async (req, res) => {
     const courtAbbreviation = await getAbbreviation(institutionName)
 
     // Generate citation number
-    const citationNo = `${year}-SL-${abbreviation}-${courtAbbreviation.toUpperCase()}-${sequenceNo}`
+    let citationNo = ''
+    if (abbreviation === 'SC') {
+      citationNo = `${year}-SL-${abbreviation}-${sequenceNo}`
+    } else {
+      citationNo = `${year}-SL-${abbreviation}-${courtAbbreviation.toUpperCase()}-${sequenceNo}`
+    }
 
     // Construct new Citation object
     const newCitation = new Citation({
