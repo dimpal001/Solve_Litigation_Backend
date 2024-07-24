@@ -34,6 +34,12 @@ citationRoute.post('/upload-citation', staffAuth, async (req, res) => {
       overRuled,
     } = req.body.citationData
 
+    // Check if caseNo already exists
+    const existingCitation = await Citation.findOne({ caseNo })
+    if (existingCitation) {
+      return res.status(400).json({ error: 'Citation already exists' })
+    }
+
     const year = new Date(dateOfOrder).getFullYear()
 
     // Find existing citations for the same year and institution
