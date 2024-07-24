@@ -39,46 +39,20 @@ citationRoute.post('/upload-citation', staffAuth, async (req, res) => {
     if (existingCitation) {
       return res.status(400).json({ error: 'Citation already exists' })
     }
+    const abbreviation = getAbbreviation(institutionName)
+    const courtAbbreviation = getCourtAbbreviation(institutionName)
 
-    const year = new Date(dateOfOrder).getFullYear()
-
-    // Find existing citations for the same year and institution
-    const lastCitation = await Citation.findOne(
-      {
-        institutionName,
-        citationNo: { $regex: `${year}-SL-.*`, $options: 'i' }, // Filter by year and institution
-      },
-      {},
-      { sort: { citationNo: -1 } }
-    ) // Get the last citation
-
-    let sequenceNo = '001' // Default sequence number
-
-    // If there is a last citation, extract its sequence number and increment it
-    if (lastCitation) {
-      const lastSequence = parseInt(lastCitation.citationNo.split('-').pop())
-      sequenceNo = String(lastSequence + 1).padStart(3, '0')
+    // Ensure valid abbreviation
+    if (!abbreviation) {
+      return res.status(400).json({ error: 'Invalid institutionName' })
     }
 
-    // Generate abbreviation
-    let abbreviation = ''
-    if (institutionName.toLowerCase().includes('supreme court')) {
-      abbreviation = 'SC'
-    } else if (institutionName.toLowerCase().includes('high court')) {
-      abbreviation = 'HC'
-    } else if (institutionName.toLowerCase().includes('tribunal')) {
-      abbreviation = 'TR'
-    }
+    const newAbbreviation = courtAbbreviation
+      ? `${abbreviation}-${courtAbbreviation}`
+      : abbreviation
 
-    const courtAbbreviation = await getCourtAbbreviation(institutionName)
-
-    // Generate citation number
-    let citationNo = ''
-    if (abbreviation === 'SC') {
-      citationNo = `${year}-SL-${abbreviation}-${sequenceNo}`
-    } else {
-      citationNo = `${year}-SL-${abbreviation}-${courtAbbreviation.toUpperCase()}-${sequenceNo}`
-    }
+    // Generate unique citation number
+    const citationNo = await generateCitationNo(newAbbreviation)
 
     // Construct new Citation object
     const newCitation = new Citation({
@@ -179,8 +153,7 @@ citationRoute.put('/update-citation/:id', staffAuth, async (req, res) => {
           return res.status(400).json({ error: 'Invalid institutionName' })
         }
         updatedCitationData.citationNo = await generateCitationNo(
-          newAbbreviation,
-          citationId
+          newAbbreviation
         )
       }
 
@@ -236,27 +209,25 @@ citationRoute.put('/update-citation/:id', staffAuth, async (req, res) => {
   }
 })
 
-const generateCitationNo = async (abbreviation, citationId) => {
-  const year = new Date().getFullYear()
-
+const generateCitationNo = async (abbreviation) => {
   let sequenceNo = '001'
   let citationNo
+  const year = new Date().getFullYear()
 
-  do {
+  while (true) {
     citationNo = `${year}-SL-${abbreviation}-${sequenceNo}`
 
     // Check if the generated citation number already exists in the database
     const existingCitation = await Citation.findOne({ citationNo })
 
-    // If the citation number exists and it's not the citation being updated, increment the sequence number
-    if (existingCitation && existingCitation._id.toString() !== citationId) {
-      const lastSequence = parseInt(sequenceNo)
-      sequenceNo = String(lastSequence + 1).padStart(3, '0')
+    // If the citation number exists, increment the sequence number
+    if (existingCitation) {
+      sequenceNo = String(parseInt(sequenceNo) + 1).padStart(3, '0')
     } else {
-      // If the citation number is unique or it's the citation being updated, break the loop
+      // If the citation number is unique, break the loop
       break
     }
-  } while (true)
+  }
 
   return citationNo
 }
