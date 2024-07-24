@@ -229,7 +229,7 @@ const generateCitationNo = async (abbreviation) => {
 
     // If the citation number exists, increment the sequence number
     if (existingCitation) {
-      sequenceNo = String(parseInt(sequenceNo) + 1).padStart(3, '0')
+      sequenceNo = String(sequenceNo + 1).padStart(3, '0')
     } else {
       // If the citation number is unique, break the loop
       break
