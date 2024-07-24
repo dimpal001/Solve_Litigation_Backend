@@ -217,6 +217,8 @@ const generateCitationNo = async (abbreviation) => {
   while (true) {
     citationNo = `${year}-SL-${abbreviation}-${sequenceNo}`
 
+    console.log(citationNo)
+
     // Check if the generated citation number already exists in the database
     const existingCitation = await Citation.findOne({ citationNo })
 
