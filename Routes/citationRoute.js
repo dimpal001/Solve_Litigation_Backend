@@ -222,6 +222,8 @@ const generateCitationNo = async (abbreviation) => {
     // Check if the generated citation number already exists in the database
     const existingCitation = await Citation.findOne({ citationNo })
 
+    console.log(existingCitation)
+
     // If the citation number exists, increment the sequence number
     if (existingCitation) {
       sequenceNo = String(parseInt(sequenceNo) + 1).padStart(3, '0')
