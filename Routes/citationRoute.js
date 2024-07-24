@@ -47,7 +47,9 @@ citationRoute.post('/upload-citation', staffAuth, async (req, res) => {
       return res.status(400).json({ error: 'Invalid institutionName' })
     }
 
-    const newAbbreviation = courtAbbreviation
+    const newAbbreviation = !institutionName
+      .toLowerCase()
+      .includes('supreme court')
       ? `${abbreviation}-${courtAbbreviation}`
       : abbreviation
 
@@ -142,10 +144,11 @@ citationRoute.put('/update-citation/:id', staffAuth, async (req, res) => {
 
         console.log(abbreviation)
 
-        const newAbbreviation =
-          courtAbbreviation && courtAbbreviation.toLowerCase() !== 'sup'
-            ? `${abbreviation}-${courtAbbreviation}`
-            : abbreviation
+        const newAbbreviation = !updatedCitationData.institutionName
+          .toLowerCase()
+          .includes('supreme court')
+          ? `${abbreviation}-${courtAbbreviation}`
+          : abbreviation
 
         console.log(newAbbreviation)
 
