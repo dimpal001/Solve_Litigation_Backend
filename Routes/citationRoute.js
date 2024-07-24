@@ -210,12 +210,15 @@ citationRoute.put('/update-citation/:id', staffAuth, async (req, res) => {
 })
 
 const generateCitationNo = async (abbreviation) => {
-  let sequenceNo = '001'
+  let sequenceNo = 1
   let citationNo
   const year = new Date().getFullYear()
 
   while (true) {
-    citationNo = `${year}-SL-${abbreviation}-${sequenceNo}`
+    citationNo = `${year}-SL-${abbreviation}-${String(sequenceNo).padStart(
+      3,
+      '0'
+    )}`
 
     console.log(citationNo)
 
