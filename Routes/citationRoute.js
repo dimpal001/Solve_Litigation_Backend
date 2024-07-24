@@ -70,40 +70,7 @@ citationRoute.post('/upload-citation', staffAuth, async (req, res) => {
       abbreviation = 'TR'
     }
 
-    function getAbbreviation(court) {
-      if (court.toLowerCase().includes('high court')) {
-        // If 'high court' is in the name, get the first three letters of the relevant court name part
-        const parts = court.split(' ')
-        for (let i = 0; i < parts.length; i++) {
-          if (
-            parts[i].toLowerCase() !== 'high' &&
-            parts[i].toLowerCase() !== 'court' &&
-            parts[i].toLowerCase() !== 'the' &&
-            parts[i].toLowerCase() !== 'of'
-          ) {
-            return parts[i].substring(0, 3).toLowerCase()
-          }
-        }
-      } else if (court.toLowerCase().includes('tribunal')) {
-        // If 'tribunal' is in the name, return 'tri'
-        return 'TRI'
-      } else {
-        // For other cases, return the first three letters of the first relevant word
-        const parts = court.split(' ')
-        for (let i = 0; i < parts.length; i++) {
-          if (
-            parts[i].toLowerCase() !== 'the' &&
-            parts[i].toLowerCase() !== 'of' &&
-            parts[i].toLowerCase() !== '&'
-          ) {
-            return parts[i].substring(0, 3).toLowerCase()
-          }
-        }
-      }
-      return '' // Return an empty string if no relevant part is found
-    }
-
-    const courtAbbreviation = await getAbbreviation(institutionName)
+    const courtAbbreviation = await getCourtAbbreviation(institutionName)
 
     // Generate citation number
     let citationNo = ''
@@ -152,6 +119,39 @@ citationRoute.post('/upload-citation', staffAuth, async (req, res) => {
   }
 })
 
+function getCourtAbbreviation(court) {
+  if (court.toLowerCase().includes('high court')) {
+    // If 'high court' is in the name, get the first three letters of the relevant court name part
+    const parts = court.split(' ')
+    for (let i = 0; i < parts.length; i++) {
+      if (
+        parts[i].toLowerCase() !== 'high' &&
+        parts[i].toLowerCase() !== 'court' &&
+        parts[i].toLowerCase() !== 'the' &&
+        parts[i].toLowerCase() !== 'of'
+      ) {
+        return parts[i].substring(0, 3).toLowerCase()
+      }
+    }
+  } else if (court.toLowerCase().includes('tribunal')) {
+    // If 'tribunal' is in the name, return 'tri'
+    return 'TRI'
+  } else {
+    // For other cases, return the first three letters of the first relevant word
+    const parts = court.split(' ')
+    for (let i = 0; i < parts.length; i++) {
+      if (
+        parts[i].toLowerCase() !== 'the' &&
+        parts[i].toLowerCase() !== 'of' &&
+        parts[i].toLowerCase() !== '&'
+      ) {
+        return parts[i].substring(0, 3).toLowerCase()
+      }
+    }
+  }
+  return ''
+}
+
 citationRoute.put('/update-citation/:id', staffAuth, async (req, res) => {
   try {
     const citationId = req.params.id
@@ -161,14 +161,25 @@ citationRoute.put('/update-citation/:id', staffAuth, async (req, res) => {
 
     if (isNormalCitation) {
       if ('institutionName' in updatedCitationData) {
-        const abbreviation = getAbbreviation(
+        let abbreviation = getAbbreviation(updatedCitationData.institutionName)
+        const courtAbbreviation = getCourtAbbreviation(
           updatedCitationData.institutionName
         )
+
+        console.log(abbreviation)
+
+        const newAbbreviation =
+          courtAbbreviation && courtAbbreviation.toLowerCase() !== 'sup'
+            ? `${abbreviation}-${courtAbbreviation}`
+            : abbreviation
+
+        console.log(newAbbreviation)
+
         if (!abbreviation) {
           return res.status(400).json({ error: 'Invalid institutionName' })
         }
         updatedCitationData.citationNo = await generateCitationNo(
-          abbreviation,
+          newAbbreviation,
           citationId
         )
       }
