@@ -561,7 +561,7 @@ citationRoute.get(
 
       const matchedCitations = await Citation.find(
         {
-          dateOfOrder: {
+          createdAt: {
             $gte: startDate,
             $lt: endDate,
           },
