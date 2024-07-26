@@ -20,7 +20,9 @@ citationRoute.post('/upload-citation', staffAuth, async (req, res) => {
       partyNameRespondent,
       title,
       judgements,
+      diaryNo,
       dateOfOrder,
+      dateOfHearing,
       judgeName,
       headNote,
       referedJudgements,
@@ -66,7 +68,9 @@ citationRoute.post('/upload-citation', staffAuth, async (req, res) => {
       partyNameRespondent,
       title,
       judgements,
+      diaryNo,
       dateOfOrder,
+      dateOfHearing,
       judgeName,
       headNote,
       referedJudgements,
@@ -136,7 +140,8 @@ citationRoute.put('/update-citation/:id', staffAuth, async (req, res) => {
     const isNormalCitation = await Citation.exists({ _id: citationId })
 
     if (isNormalCitation) {
-      if ('institutionName' in updatedCitationData) {
+      const citation = await Citation.findById(citationId)
+      if (updatedCitationData.institutionName !== citation.institutionName) {
         let abbreviation = getAbbreviation(updatedCitationData.institutionName)
         const courtAbbreviation = getCourtAbbreviation(
           updatedCitationData.institutionName
@@ -214,7 +219,7 @@ citationRoute.put('/update-citation/:id', staffAuth, async (req, res) => {
 
 const generateCitationNo = async (abbreviation) => {
   let sequenceNo = 1
-  let citationNo
+  let citationNo = ''
   const year = new Date().getFullYear()
 
   while (true) {
@@ -223,16 +228,14 @@ const generateCitationNo = async (abbreviation) => {
       '0'
     )}`
 
-    console.log(citationNo)
-
     // Check if the generated citation number already exists in the database
-    const existingCitation = await Citation.findOne({ citationNo })
-
-    console.log(existingCitation)
+    const existingCitation = await Citation.findOne({
+      citationNo: citationNo,
+    })
 
     // If the citation number exists, increment the sequence number
     if (existingCitation) {
-      sequenceNo = String(sequenceNo + 1).padStart(3, '0')
+      sequenceNo++
     } else {
       // If the citation number is unique, break the loop
       break
@@ -282,7 +285,7 @@ citationRoute.get('/pending-citations', staffAuth, async (req, res) => {
   try {
     const pendingCitations = await Citation.find(
       { status: 'pending' },
-      '_id status type citationNo title dateOfOrder institutionName lastModifiedDate'
+      '_id status type citationNo title createdAt dateOfOrder institutionName lastModifiedDate'
     )
 
     res.status(200).json({ pendingCitations: pendingCitations })
@@ -296,7 +299,7 @@ citationRoute.get('/approved-citations', adminAuth, async (req, res) => {
   try {
     const citations = await Citation.find(
       { status: 'approved' },
-      '_id status type citationNo title dateOfOrder institutionName lastModifiedDate'
+      '_id status type citationNo title createdAt dateOfOrder institutionName lastModifiedDate'
     )
 
     res.status(200).json({ approvedCitations: citations })
@@ -566,7 +569,7 @@ citationRoute.get(
             $lt: endDate,
           },
         },
-        '_id status type citationNo title dateOfOrder institutionName lastModifiedDate'
+        '_id status type citationNo createdAt title dateOfOrder institutionName lastModifiedDate'
       )
 
       res.status(200).json(matchedCitations)
