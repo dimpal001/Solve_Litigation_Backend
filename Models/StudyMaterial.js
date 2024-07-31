@@ -1,30 +1,35 @@
 const mongoose = require('mongoose')
 
-const questionSchema = new mongoose.Schema({
-  question: {
+const questionAnswerSchema = new mongoose.Schema({
+  question: { type: String, required: true },
+  answer: { type: String, required: true },
+  chapters: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Chapter' }],
+})
+
+const chapterSchema = new mongoose.Schema({
+  name: {
     type: String,
     required: true,
-  },
-  answer: {
-    type: String,
-    required: true,
-  },
-  topicId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Topic',
-    required: true,
+    trim: true,
   },
 })
 
 const topicSchema = new mongoose.Schema({
-  topic: {
+  name: {
     type: String,
     required: true,
-    unique: true,
+    trim: true,
   },
-  questions: [questionSchema],
+  chapters: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Chapter',
+    },
+  ],
 })
 
 const Topic = mongoose.model('Topic', topicSchema)
+const Chapter = mongoose.model('Chapter', chapterSchema)
+const QuestionAnswer = mongoose.model('QuestionAnswer', questionAnswerSchema)
 
-module.exports = Topic
+module.exports = { Topic, Chapter, QuestionAnswer }
