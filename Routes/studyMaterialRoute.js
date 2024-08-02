@@ -1,6 +1,7 @@
 const express = require('express')
 const mongoose = require('mongoose')
 const { Topic, Chapter, QuestionAnswer } = require('../Models/StudyMaterial')
+const userAuth = require('../Middleware/userAuth')
 
 const studyMaterialRoute = express.Router()
 
@@ -17,7 +18,7 @@ studyMaterialRoute.post('/topics', async (req, res) => {
 })
 
 // Get all Topics
-studyMaterialRoute.get('/topics', async (req, res) => {
+studyMaterialRoute.get('/topics', userAuth, async (req, res) => {
   try {
     const topics = await Topic.find().populate('chapters')
     res.status(200).send(topics)
@@ -248,5 +249,112 @@ studyMaterialRoute.delete('/question-answers/:id', async (req, res) => {
     res.status(500).send(error)
   }
 })
+
+// Page wise question answer
+studyMaterialRoute.get(
+  '/study-materials/:pageNumber',
+  userAuth,
+  async (req, res) => {
+    const { pageNumber } = req.params
+    const limit = 10
+    const page = parseInt(pageNumber, 10)
+
+    try {
+      const skip = pageNumber * limit
+      // Find the questions with pagination and sort in descending order
+      const questions = await QuestionAnswer.find()
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+
+      // Get the total count of questions for pagination
+      const totalCount = await QuestionAnswer.countDocuments()
+
+      res.status(200).json({
+        questions,
+        currentPage: page,
+        totalPages: Math.ceil(totalCount / limit),
+      })
+    } catch (error) {
+      console.log(error)
+      res.status(500).json({ message: 'Server error' })
+    }
+  }
+)
+
+// Page wise question answer based on the chapter Id
+studyMaterialRoute.get(
+  '/chapter/:chapterId/:pageNumber',
+  userAuth,
+  async (req, res) => {
+    const { chapterId, pageNumber } = req.params
+    const limit = 10
+    const page = parseInt(pageNumber, 10)
+
+    try {
+      const skip = pageNumber * limit
+      // Find the questions with the specified chapterId with pagination and sort in descending order
+      const questions = await QuestionAnswer.find({ chapters: chapterId })
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+
+      // Get the total count of questions with the specified chapterId for pagination
+      const totalCount = await QuestionAnswer.countDocuments({
+        chapters: chapterId,
+      })
+
+      res.status(200).json({
+        questions,
+        currentPage: page,
+        totalPages: Math.ceil(totalCount / limit),
+      })
+    } catch (error) {
+      console.log(error)
+      res.status(500).json({ message: 'Server error' })
+    }
+  }
+)
+
+// Search question answer
+studyMaterialRoute.get(
+  '/search-questions/:pageNumber',
+  userAuth,
+  async (req, res) => {
+    const query = req.query.query
+
+    const { chapterId, pageNumber } = req.params
+    const limit = 10
+    const page = parseInt(pageNumber, 10)
+
+    try {
+      const skip = pageNumber * limit
+      // Find the questions with the specified chapterId with pagination and sort in descending order
+      const questions = await QuestionAnswer.find({
+        $or: [
+          { question: { $regex: query, $options: 'i' } },
+          { answer: { $regex: query, $options: 'i' } },
+        ],
+      })
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+
+      // Get the total count of questions with the specified chapterId for pagination
+      const totalCount = await QuestionAnswer.countDocuments({
+        chapters: chapterId,
+      })
+
+      res.status(200).json({
+        questions,
+        currentPage: page,
+        totalPages: Math.ceil(totalCount / limit),
+      })
+    } catch (error) {
+      console.log(error)
+      res.status(500).json({ message: 'Server error' })
+    }
+  }
+)
 
 module.exports = studyMaterialRoute
