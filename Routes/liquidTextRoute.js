@@ -171,7 +171,7 @@ liquidTextRoute.post(
   async (req, res) => {
     try {
       const { clientId, argumentId } = req.params
-      const { liquidText } = req.body
+      const { title, text, pageNo } = req.body
 
       const client = await LiquidText.findById(clientId)
 
@@ -185,12 +185,19 @@ liquidTextRoute.post(
         return res.status(404).send({ error: 'Argument not found' })
       }
 
+      // Create the liquid text object
+      const newLiquidText = { title, text, pageNo }
+
       // Check if the liquid text already exists
-      if (argument.liquidText.includes(liquidText)) {
+      if (
+        argument.liquidText.some(
+          (lt) => lt.text === text && lt.pageNo === pageNo
+        )
+      ) {
         return res.status(400).send({ error: 'Liquid text already exists' })
       }
 
-      argument.liquidText.push(liquidText)
+      argument.liquidText.push(newLiquidText)
       await client.save()
 
       // Fetch the updated client again to get the correct argument with liquidText array
@@ -356,11 +363,11 @@ liquidTextRoute.delete(
 
 // Route to delete a specific liquid text from an argument
 liquidTextRoute.delete(
-  '/delete-liquid-text/:clientId/:argumentId/:liquidText',
+  '/delete-liquid-text/:clientId/:argumentId/:liquidTextId',
   userAuth,
   async (req, res) => {
     try {
-      const { clientId, argumentId, liquidText } = req.params
+      const { clientId, argumentId, liquidTextId } = req.params
 
       const client = await LiquidText.findById(clientId)
 
@@ -375,7 +382,7 @@ liquidTextRoute.delete(
       }
 
       const liquidTextIndex = argument.liquidText.findIndex(
-        (text) => text === liquidText
+        (text) => text._id.toString() === liquidTextId
       )
 
       if (liquidTextIndex === -1) {

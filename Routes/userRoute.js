@@ -247,24 +247,13 @@ userRoute.get('/user-details/:userId', async (req, res) => {
     const userId = req.params.userId
     console.log(userId)
 
-    const user = await User.findById(userId)
+    const user = await User.findById(userId).select('-password')
 
     if (!user) {
       return res.status(404).json({ message: 'User not found' })
     }
 
-    const userDetails = {
-      fullName: user.fullName,
-      email: user.email,
-      phoneNumber: user.phoneNumber,
-      specialist: user.specialist,
-      state: user.state,
-      address: user.address,
-      district: user.district,
-      userType: user.userType,
-    }
-
-    res.status(200).json(userDetails)
+    res.status(200).json(user)
   } catch (error) {
     console.log(error)
     res.status(500).json({ message: 'Internal server error' })

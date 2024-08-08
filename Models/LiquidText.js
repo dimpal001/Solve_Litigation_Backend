@@ -13,8 +13,18 @@ const argumentSchema = new mongoose.Schema({
   },
   liquidText: [
     {
-      type: String,
-      required: true,
+      title: {
+        type: String,
+        required: true,
+      },
+      text: {
+        type: String,
+        required: true,
+      },
+      pageNo: {
+        type: Number,
+        required: true,
+      },
     },
   ],
 })
