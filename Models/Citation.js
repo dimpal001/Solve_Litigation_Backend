@@ -12,6 +12,8 @@ const citationSchema = new mongoose.Schema({
   partyNameAppealant: String,
   partyNameRespondent: String,
   title: String,
+  title1: String,
+  title2: String,
   judgements: String,
   diaryNo: String,
   dateOfOrder: Date,

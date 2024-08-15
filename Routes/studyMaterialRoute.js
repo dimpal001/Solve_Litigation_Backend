@@ -207,13 +207,23 @@ studyMaterialRoute.get('/question-answers', async (req, res) => {
 // Get a single QuestionAnswer by ID
 studyMaterialRoute.get('/question-answers/:id', async (req, res) => {
   try {
+    // Find the requested QuestionAnswer by ID and populate the chapters
     const questionAnswer = await QuestionAnswer.findById(
       req.params.id
     ).populate('chapters')
+
     if (!questionAnswer) {
       return res.status(404).send()
     }
-    res.status(200).send(questionAnswer)
+
+    // Find other QuestionAnswers that belong to the same chapters, excluding the 'answer' field
+    const matchedQuestions = await QuestionAnswer.find({
+      chapters: { $in: questionAnswer.chapters },
+      _id: { $ne: questionAnswer._id }, // Exclude the current question
+    }).select('_id question ') // Select only 'question' and 'chapters' fields
+
+    // Send the response including the requested QuestionAnswer and matched questions
+    res.status(200).send({ questionAnswer, matchedQuestions })
   } catch (error) {
     res.status(500).send(error)
   }
