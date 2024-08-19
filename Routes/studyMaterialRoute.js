@@ -13,7 +13,7 @@ studyMaterialRoute.post('/topics', async (req, res) => {
     res.status(201).send(topic)
   } catch (error) {
     console.log(error)
-    res.status(500).json({ message: 'Internal server error' })
+    res.status(500).json({ message: 'Internal server error ' })
   }
 })
 
