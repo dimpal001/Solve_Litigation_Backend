@@ -558,17 +558,17 @@ citationRoute.get(
     try {
       const { year, month, day } = req.params
 
-      // Create start date from year, month, and day parameters
-      const startDate = new Date(year, month - 1, day)
+      // Create start date from year, month, and day parameters in UTC
+      const startDate = new Date(Date.UTC(year, month - 1, day))
       startDate.setUTCHours(0, 0, 0, 0)
 
-      // Create end date (start of the next day)
+      // Create end date (start of the next day) in UTC
       const endDate = new Date(startDate)
       endDate.setUTCDate(startDate.getUTCDate() + 1)
 
       const matchedCitations = await Citation.find(
         {
-          createdAt: {
+          dateOfOrder: {
             $gte: startDate,
             $lt: endDate,
           },
