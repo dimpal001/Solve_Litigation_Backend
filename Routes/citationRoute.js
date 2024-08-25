@@ -57,8 +57,10 @@ citationRoute.post('/upload-citation', staffAuth, async (req, res) => {
       ? `${abbreviation}-${courtAbbreviation}`
       : abbreviation
 
+    console.log(newAbbreviation)
+
     // Generate unique citation number
-    const citationNo = await generateCitationNo(newAbbreviation)
+    const citationNo = await generateCitationNo(newAbbreviation, dateOfOrder)
 
     // Construct new Citation object
     const newCitation = new Citation({
@@ -145,13 +147,20 @@ citationRoute.put('/update-citation/:id', staffAuth, async (req, res) => {
 
     if (isNormalCitation) {
       const citation = await Citation.findById(citationId)
+      let newCitationNo = ''
+      if (updatedCitationData.dateOfOrder) {
+        newCitationNo = updateCitationNo(
+          citation.citationNo,
+          updatedCitationData.dateOfOrder
+        )
+        updatedCitationData.citationNo = newCitationNo
+      }
+
       if (updatedCitationData.institutionName !== citation.institutionName) {
         let abbreviation = getAbbreviation(updatedCitationData.institutionName)
         const courtAbbreviation = getCourtAbbreviation(
           updatedCitationData.institutionName
         )
-
-        console.log(abbreviation)
 
         const newAbbreviation = !updatedCitationData.institutionName
           .toLowerCase()
@@ -165,7 +174,8 @@ citationRoute.put('/update-citation/:id', staffAuth, async (req, res) => {
           return res.status(400).json({ error: 'Invalid institutionName' })
         }
         updatedCitationData.citationNo = await generateCitationNo(
-          newAbbreviation
+          newAbbreviation,
+          updatedCitationData.dateOfOrder
         )
       }
 
@@ -221,10 +231,20 @@ citationRoute.put('/update-citation/:id', staffAuth, async (req, res) => {
   }
 })
 
-const generateCitationNo = async (abbreviation) => {
+const updateCitationNo = (citationNo, dateOfOrder) => {
+  // Extract the year from dateOfOrder
+  const newYear = String(new Date(dateOfOrder).getFullYear())
+
+  // Replace the first 4 characters of citationNo with the new year
+  const updatedCitationNo = newYear + citationNo.slice(4)
+
+  return updatedCitationNo
+}
+
+const generateCitationNo = async (abbreviation, dateOfOrder) => {
   let sequenceNo = 1
   let citationNo = ''
-  const year = new Date().getFullYear()
+  const year = String(new Date(dateOfOrder).getFullYear())
 
   while (true) {
     citationNo = `${year}-SL-${abbreviation}-${String(sequenceNo).padStart(
