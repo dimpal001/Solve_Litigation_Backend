@@ -323,6 +323,8 @@ userRoute.post('/create-staff', adminAuth, async (req, res) => {
       address,
       password: hashedPassword,
       userType: 'staff',
+      isVerified: true,
+      verificationToken: '',
     })
 
     await staffUser.save()
