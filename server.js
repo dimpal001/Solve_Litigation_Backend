@@ -34,7 +34,7 @@ const io = socketIo(server, {
 })
 
 app.use(bodyParser.json({ limit: '250mb' }))
-app.use(bodyParser.urlencoded({ extended: true, limit: '80mb' }))
+app.use(bodyParser.urlencoded({ extended: true, limit: '250mb' }))
 app.use(morgan('dev'))
 app.use(cors())
 
